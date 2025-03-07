@@ -1,15 +1,17 @@
-# main.py (Flask example)
+# main.py
+from flask import Flask
+from app.controllers.verify_controller import verify_blueprint
 
-from flask import Flask, request, jsonify
+def create_app():
+    app = Flask(__name__)
+    
+    # Register your blueprint for the /verify endpoint
+    app.register_blueprint(verify_blueprint, url_prefix="/verify")
 
-app = Flask(__name__)
-
-@app.route('/verify', methods=['POST'])
-def verify_claim():
-    data = request.get_json()
-    text = data.get("text", "")
-    # Again, call your pipeline logic or just do a dummy response:
-    return jsonify({"score": 75.5, "summary": "Dummy explanation"})
+    # (Optional) configure app settings, load env, etc.
+    return app
 
 if __name__ == "__main__":
+    app = create_app()
+    # Run on port 5000 by default
     app.run(debug=True, host="0.0.0.0", port=5000)
