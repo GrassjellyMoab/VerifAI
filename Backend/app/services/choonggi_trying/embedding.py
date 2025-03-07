@@ -1,14 +1,8 @@
-import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-import time
 
-import requests
-from bs4 import BeautifulSoup
-from duckduckgo_search import DDGS
-from urllib.parse import urlparse
 from flask import Blueprint, request, jsonify
-from check_domain import is_credible # your is_credible function
+
 
 embedding_blueprint = Blueprint("embedding_blueprint", __name__)
 

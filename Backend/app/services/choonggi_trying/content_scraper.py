@@ -1,7 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from duckduckgo_search import DDGS
-from check_domain import is_credible
 from flask import Blueprint, request, jsonify
 
 scrape_content_blueprint = Blueprint("scrape_content_blueprint", __name__)

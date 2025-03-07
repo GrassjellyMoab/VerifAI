@@ -1,4 +1,4 @@
-import random
+
 
 CREDIBLE_DOMAINS = [
     # --- TLD patterns (handle via partial checks in code) ---

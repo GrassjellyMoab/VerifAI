@@ -1,12 +1,10 @@
 import os
 import time
-from random import random
 
 import requests
-from bs4 import BeautifulSoup
-from duckduckgo_search import DDGS
 from urllib.parse import urlparse
 from flask import Blueprint, request, jsonify
+import re
 
 from check_domain import is_credible # your is_credible function
 from googlesearch import search
@@ -96,19 +94,6 @@ def get_domain(url: str) -> str:
     except Exception:
         return ""
 
-def duckduckgo_search(query, num_results=15):
-    """Search DuckDuckGo for the given query and return top results."""
-    results = []
-
-    try:
-        with DDGS() as ddgs:
-            for r in ddgs.text(query, max_results=num_results):
-                results.append({"title": r["title"], "url": r["href"]})
-
-    except Exception:
-        print("Exception occurred" + str(len(results)))
-    return results
-
 
 def google_custom_search(query, num_results=10):
     """
@@ -184,7 +169,7 @@ def verify_keywords_with_sources():
 
     verified_results = []
     allowed_tlds = [".com", ".sg", ".org"]
-    import re
+
 
     pattern = r"(who\.int|who\.org|un\.org|europa\.eu|imf\.org|worldbank\.org|oecd\.org|edu\.sg|ac\.sg|moh\.gov\.sg|mom\.gov\.sg|mas\.gov\.sg|mha\.gov\.sg|nea\.gov\.sg|ica\.gov\.sg|singstat\.gov\.sg|police\.gov\.sg|straitstimes\.com|channelnewsasia\.com|todayonline\.com|zaobao\.com\.sg|businesstimes\.com\.sg|cdc\.gov|nih\.gov|fda\.gov|epa\.gov|ftc\.gov|consumer\.ftc\.gov|usa\.gov|bbc\.com|bbc\.co\.uk|reuters\.com|apnews\.com|theguardian\.com|nytimes\.com|washingtonpost\.com|cnn\.com|npr\.org|wsj\.com|bloomberg\.com|abcnews\.go\.com|cbsnews\.com|nbcnews\.com|latimes\.com|snopes\.com|factcheck\.org|politifact\.com|fullfact\.org|truthout\.org|sciencedirect\.com|nature\.com|sciencemag\.org|nationalgeographic\.com|newscientist\.com|malwarebytes\.com|kaspersky\.com|mcafee\.com|forbes\.com)"
     url = "https://www.who.int/news/world-xyz"
