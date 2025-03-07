@@ -2,8 +2,10 @@
 import os
 
 import requests
-import telebot
+import os
 import pytesseract as te
+from PIL import Image
+import telebot
 from dotenv import load_dotenv
 
 # 1) Load .env if you have it in the project root or telegram_bot folder
@@ -44,6 +46,7 @@ def handle_text(message):
 
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
+    image_folder = "images"
     # 6) Download the photo file, run OCR (if needed),
     #    then call the backend the same way
     file_id = message.photo[-1].file_id  # last element has the highest resolution
@@ -55,7 +58,7 @@ def handle_photo(message):
     else:
         bot.reply_to(message, "Photo received. (OCR step not yet implemented!)")
 
-    #OCR implementation
+    # image downloading
     file_info = bot.get_file(file_id)
     file_path = file_info.file_path
 
@@ -68,13 +71,20 @@ def handle_photo(message):
         file_data = response.content
         file_name = file_info.file_path.split("/")[-1]  # Extracts "image.jpg"
 
+        os.makedirs(image_folder, exist_ok=True)
+        file_name = os.path.join(image_folder, file_name)
+
         with open(file_name, "wb") as f:
             f.write(file_data)
 
-        bot.reply_to(message, f"Photo saved as {file_name}")
-        with open(file_name, "rb") as photo:
-            bot.send_photo(message.chat.id, photo, caption=f"how to send back image")
+        # bot.reply_to(message, f"Photo saved as {file_name}")
+        # with open(file_name, "rb") as photo:
+        #     bot.send_photo(message.chat.id, photo, caption=f"how to send back image")
 
+    # now process image for words
+
+    text = te.image_to_string(Image.open("downloaded_image.jpg"))
+    bot.reply_to(message, f"Extracted Text: {text}")
 # 7) Start polling
 if __name__ == "__main__":
     print("Bot is polling...")
