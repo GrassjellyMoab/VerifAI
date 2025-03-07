@@ -2,9 +2,11 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
 
+
 def __basic_tokenisation(text):
     sentences = re.split('[.!?]', text)
     return sentences
+
 
 def __dynamic_max_df(sentences, base_threshold=0.85, min_threshold=0.5):
     num_sentences = len(sentences)
@@ -15,6 +17,7 @@ def __dynamic_max_df(sentences, base_threshold=0.85, min_threshold=0.5):
         return max(base_threshold, 0.95)  # Allow frequent words more
     else:
         return max(min_threshold, base_threshold - (num_sentences * 0.01))  # Reduce max_df dynamically
+
 
 def __remove_redundant_keywords(keywords):
     """
@@ -29,6 +32,7 @@ def __remove_redundant_keywords(keywords):
             unique_keywords.append(keyword)
 
     return unique_keywords
+
 
 def tf_idf_keywords(user_text):
     """
@@ -58,3 +62,5 @@ def tf_idf_keywords(user_text):
         all_top_words.update(feature_names[j] for j in top_indices)
 
     return __remove_redundant_keywords(list(all_top_words))
+
+

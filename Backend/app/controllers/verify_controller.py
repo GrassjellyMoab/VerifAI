@@ -1,7 +1,7 @@
 # verify_controller.py
 from flask import Blueprint, request, jsonify
 from app.services.web_search import perform_web_search
-
+from app.services.tf_idf import tf_idf_keywords
 
 verify_blueprint = Blueprint("verify_blueprint", __name__)
 
@@ -17,7 +17,6 @@ def verify_claim():
     # Then do your search:
     # search_results = perform_web_search(user_text)
     # print(search_results)
-
 
 
 
