@@ -1,23 +1,18 @@
-# app/controllers/verify_controller.py
-
+# verify_controller.py
 from flask import Blueprint, request, jsonify
+from app.services.web_search import perform_web_search 
 
-# Define a Flask Blueprint
 verify_blueprint = Blueprint("verify_blueprint", __name__)
 
 @verify_blueprint.route("/", methods=["POST"])
 def verify_claim():
     data = request.get_json()
-    if not data or "text" not in data:
-        return jsonify({"error": "No text provided"}), 400
+    user_text = data.get("text", "")
 
-    text_to_verify = data["text"]
+    # Then do your search:
+    search_results = perform_web_search(user_text)
+    print(search_results)
     
-    # Call your pipeline (search, scrape, embed, stance detect, etc.)
-    # For hackathon demonstration, let's do a dummy response:
-    # reliability_score = run_fact_check(text_to_verify)
+    # ...some logic to parse results, compute reliability, etc...
 
-    return jsonify({
-        "score": 75.5,
-        "summary": "Dummy explanation. Found some sources supporting, some refuting."
-    })
+    return jsonify({"score": 80, "summary": "Found multiple supporting articles."})
