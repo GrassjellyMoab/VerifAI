@@ -83,8 +83,10 @@ def handle_photo(message):
 
     # now process image for words
 
-    text = te.image_to_string(Image.open("downloaded_image.jpg"))
-    bot.reply_to(message, f"Extracted Text: {text}")
+        text = te.image_to_string(Image.open(file_name))
+        bot.reply_to(message, text)
+
+
 # 7) Start polling
 if __name__ == "__main__":
     print("Bot is polling...")
