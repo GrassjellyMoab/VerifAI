@@ -65,7 +65,7 @@ def handle_photo(message):
         raise ValueError("file was not correctly received backend in bot.py file")
 
     else:
-        bot.reply_to(message, "Photo received. (OCR step not yet implemented!)")
+        bot.reply_to(message, "Photo received. Processing it right now")
 
     # image downloading
     file_info = bot.get_file(file_id)
