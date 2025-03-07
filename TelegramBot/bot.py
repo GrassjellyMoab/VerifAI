@@ -1,7 +1,9 @@
 # bot.py
 import os
+
 import requests
 import telebot
+import pytesseract as te
 from dotenv import load_dotenv
 
 # 1) Load .env if you have it in the project root or telegram_bot folder
@@ -44,7 +46,34 @@ def handle_text(message):
 def handle_photo(message):
     # 6) Download the photo file, run OCR (if needed),
     #    then call the backend the same way
-    bot.reply_to(message, "Photo received. (OCR step not yet implemented!)")
+    file_id = message.photo[-1].file_id  # last element has the highest resolution
+
+    if file_id is None:
+        bot.reply_to(message, "photo was not correctly received!")
+        raise ValueError("file was not correctly received backend in bot.py file")
+
+    else:
+        bot.reply_to(message, "Photo received. (OCR step not yet implemented!)")
+
+    #OCR implementation
+    file_info = bot.get_file(file_id)
+    file_path = file_info.file_path
+
+    #construction of download url of image to process
+    file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+
+    # Get the image
+    response = requests.get(file_url)
+    if response.status_code == 200:
+        file_data = response.content
+        file_name = file_info.file_path.split("/")[-1]  # Extracts "image.jpg"
+
+        with open(file_name, "wb") as f:
+            f.write(file_data)
+
+        bot.reply_to(message, f"Photo saved as {file_name}")
+        with open(file_name, "rb") as photo:
+            bot.send_photo(message.chat.id, photo, caption=f"how to send back image")
 
 # 7) Start polling
 if __name__ == "__main__":
