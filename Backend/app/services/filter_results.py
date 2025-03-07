@@ -1,5 +1,5 @@
 from urllib.parse import urlparse
-from check_domain import is_credible
+from choonggi_trying.check_domain import is_credible
 def extract_domain(url: str) -> str:
     parsed = urlparse(url)
     return parsed.netloc.lower()

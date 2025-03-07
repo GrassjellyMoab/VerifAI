@@ -48,7 +48,7 @@ def tf_idf_keywords(user_text):
         ngram_range=(1, 2),  # Capture bigrams and trigrams
         max_df=max_df,  # Ignore very common words
         min_df=1,  # ignore words only appearing once
-        max_features=50  # only keep top 50 words
+        max_features=20  # only keep top 50 words
     )
 
     tfidf_matrix = vectorizer.fit_transform(sentences)

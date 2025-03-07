@@ -1,3 +1,5 @@
+import random
+
 CREDIBLE_DOMAINS = [
     # --- TLD patterns (handle via partial checks in code) ---
     ".gov",          # covers cdc.gov, nih.gov, etc.
@@ -91,10 +93,13 @@ CREDIBLE_DOMAINS = [
     "kaspersky.com",
     "mcafee.com",
 
+    "snopes.com", "factcheck.org", "politifact.com", "reuters.com", "bbc.com",
+    "apnews.com", "npr.org", "theguardian.com", "forbes.com", "bloomberg.com"
+
     # --- Additional TLD patterns or country-specific G/NGOs may follow ---
 ]
 
-def is_credible(domain: str) -> bool:
+def is_credible(domain: str) -> int:
     domain = domain.lower()
     # Remove "www."
     if domain.startswith("www."):
@@ -104,10 +109,9 @@ def is_credible(domain: str) -> bool:
         # if the pattern has a leading dot, e.g. ".gov", we do endswith
         if pattern.startswith("."):
             if domain.endswith(pattern):
-                return True
+                return 1
         else:
             # Instead of exact match, also do endswith for patterns like "straitstimes.com"
             if domain.endswith(pattern):
-                return True
-    return False
-
+                return 1
+    return -1

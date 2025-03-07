@@ -1,6 +1,5 @@
 # verify_controller.py
 from flask import Blueprint, request, jsonify
-from app.services.web_search import perform_web_search
 from app.services.tf_idf import tf_idf_keywords
 
 verify_blueprint = Blueprint("verify_blueprint", __name__)
@@ -22,5 +21,5 @@ def verify_claim():
 
     return jsonify({
         "score": 80,
-        "summary": "not implemented"  # Convert set to list for JSON response
+        "keywords": keywords  # Convert set to list for JSON response
     })
