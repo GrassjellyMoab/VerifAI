@@ -111,13 +111,13 @@ def reliability_calculator(message, user_text):
                            "vector": article_vec}
             """
 
-
+            bot.reply_to(message, f"score is: {score}")
         else:
             reply_data = "Error in embedding. Server responded with an error."
     except Exception as e:
         reply_data = f"Error: {e}"
-        print("herere")
-        bot.reply_to(message, f"score is: {score}")
+
+
 
 
 @bot.message_handler(commands=['start', 'help'])
