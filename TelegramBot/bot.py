@@ -21,14 +21,7 @@ bot = telebot.TeleBot(BOT_TOKEN)
 #    If you run Flask locally: e.g. "http://localhost:5000/verify"
 BACKEND_URL = "http://localhost:5000/verify"
 
-@bot.message_handler(commands=['start', 'help'])
-def send_welcome(message):
-    bot.reply_to(message, "Hello! Send me a piece of text or a link, and I'll check reliability.")
-
-@bot.message_handler(content_types=['text'])
-def handle_text(message):
-    user_text = message.text
-    # 5) Send text to your backend /verify endpoint
+def reliability_calculator(message, user_text):
     payload = {"text": user_text}
     try:
         response = requests.post(BACKEND_URL, json=payload)
@@ -44,8 +37,24 @@ def handle_text(message):
 
     bot.reply_to(message, reply_msg)
 
+
+@bot.message_handler(commands=['start', 'help'])
+def send_welcome(message):
+    bot.reply_to(message, "Hello! Send me a piece of text or a link, and I'll check reliability.")
+
+
+@bot.message_handler(content_types=['text'])
+def handle_text(message):
+    user_text = message.text
+    # 5) Send text to your backend /verify endpoint
+    reliability_calculator(message, user_text)
+
+
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
+    """
+    downloads image from telegram bot, processes content words and returns text
+    """
     image_folder = "images"
     # 6) Download the photo file, run OCR (if needed),
     #    then call the backend the same way
@@ -81,11 +90,12 @@ def handle_photo(message):
         # with open(file_name, "rb") as photo:
         #     bot.send_photo(message.chat.id, photo, caption=f"how to send back image")
 
-    # now process image for words
+        # now process image for words
+        user_text = te.image_to_string(Image.open(file_name))
+        bot.reply_to(message, user_text)
 
-        text = te.image_to_string(Image.open(file_name))
-        bot.reply_to(message, text)
-
+        # send to backend
+        reliability_calculator(message, user_text)
 
 # 7) Start polling
 if __name__ == "__main__":
