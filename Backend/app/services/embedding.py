@@ -42,7 +42,12 @@ def compute_credibility_score():
     input_text = data.get("input_text")
 
     input_vec = embed_text(input_text)
-    total_score = 0.0
+    total_score = 0
+    highest_score = -1
+    min_score = 1
+    average_score = 0
+    supporting_article = "None"
+    challenging_article = "None"
     return_vec = []
     if not _:
         return jsonify({"credibility_score": total_score})
@@ -57,25 +62,24 @@ def compute_credibility_score():
 
         article_vec = embed_text(article_content)
         sim = compute_similarity(input_vec, article_vec)
-        return_vec.append({"url": url,
-                            "reliability": reliability,
-                            "article_content": article_content,
-                           "similarity": sim,
-                           "vector": article_vec})
 
-        # 4) Weight by reliability
-        if reliability == 1:
-            weighted_score = sim * 1.0
-        else:
-            weighted_score = sim * -1.0
+        if sim > highest_score:
+            highest_score = max(sim, highest_score)
+            supporting_article = url
+        total_score +=sim
+        average_score = total_score / len(_)
 
-        total_score = max(weighted_score,total_score)
+        if sim < min_score:
+            min_score = min(sim,min_score)
+            challenging_article = url
 
-
-    print(total_score)
 
     # 5) Final credibility score (interpret as you wish)
-    return jsonify({"score":total_score})# TODO
+    return jsonify({"average_score":average_score,
+                    "highest_score": highest_score,
+                    "lowest_score" : min_score,
+                    "supporting_article": supporting_article,
+                    "challenging_article": challenging_article})
 
 
 # ------------------------------------------

@@ -11,6 +11,20 @@ scrape_url = "http://localhost:5000/scrape"
 scrape_content_url = "http://localhost:5000/scrape_content"
 embedding_url = "http://localhost:5000/embedding"
 
+def reliability_check(min_score, max_score, min_article, max_article):
+    if min_score < -0.3:
+        return f"Highly Unreliable. Sources suggest opposite of the claim. \n\n source URL: {min_article}"
+
+    if max_score < 0.55:
+        return "Unreliable. No credible sources back the claim up."
+
+    if max_score > 0.5 and max_score < 0.60:
+        return f"It is ambiguous whether the claim is reliable. \n Some credible sources support it slightly, but doesnt support it directly. \n\n source URL: {max_article}"
+
+    if max_score > 0.60:
+        return f"There is strong evidence that the claim is reliable. The source: backs it up. \n\n source URL: {max_article}"
+
+
 
 def reliability_model(message, user_text, bot,
                       redundancy_threshold=15,  # tf - idf parameter
@@ -55,7 +69,6 @@ def reliability_model(message, user_text, bot,
                 "is_singapore_sources": is_singapore_sources
                 }
     import re
-    pattern_extension = re.compile(r"(\.com(?:/|$)|\.html?(?:/|$))", re.IGNORECASE)
 
     try:
         response = requests.post(scrape_url, json=payload2)
@@ -72,14 +85,16 @@ def reliability_model(message, user_text, bot,
                     url = result.get("url", "")
                     if url.endswith(".xml"):
                         continue
-                    if pattern_extension.search(url):
-                        return_data += f"{title}\nlink: {url}\n\n\n"
+
+                    return_data += f"{title}\nlink: {url}\n\n\n"
 
         else:
-            reply_msg = "Error verifying. Server responded with an error."
+            return_data = "Error verifying. Server responded with an error."
     except Exception as e:
         reply_data = f"Error: {e}"
-
+    if return_data == "":
+        bot.send_message(message.chat.id, "No relevant credible Sources could be found. This is likely a fake news.")
+        return None
     bot.send_message(message.chat.id, return_data)
     bot.send_message(message.chat.id, "extracting content of sources...")
     # WORKS TILL HERE
@@ -117,16 +132,16 @@ def reliability_model(message, user_text, bot,
         data = response.json()
         results = data.get("results", "N/A")  # all articles info
         input_vector = data.get("input_vector", "N/A")
-        score = data.get("score", "N/A")
-        """
-        list of {"url": url,
-                        "reliability": reliability,
-                        "article_content": article_content,
-                       "similarity": sim,
-                       "vector": article_vec}
-        """
+        average_score = data.get("average_score", "N/A")
+        max_score = data.get("highest_score", "N/A")
+        min_score = data.get("lowest_score", "N/A")
+        max_article = data.get("supporting_article", "N/A")
+        min_article = data.get("challenging_article", "N/A")
 
-        bot.send_message(message.chat.id, f"score is: {score}")
+        bot.send_message(message.chat.id, f"average score is: {average_score}\nhighest score is: {max_score}\nlowest score is: {min_score}")
+
+        bot.reply_to(message, reliability_check(min_score, max_score,min_article,max_article))
+
 
     except Exception as e:
         reply_data = f"Error: {e}"

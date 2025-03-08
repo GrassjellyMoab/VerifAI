@@ -77,3 +77,4 @@ regex~=2024.11.6
 sentence-transformers~=3.4.1
 bs4~=0.0.2
 nltk~=3.9.1
+PyPDF2~=3.0.1

@@ -78,7 +78,7 @@ def tf_idf_keywords(user_text,redundancy_threshold=15):
         ngram_range=(1, 2),  # Capture bigrams and trigrams
         max_df=max_df,  # Ignore very common words
         min_df=1,  # ignore words only appearing once
-        max_features=50  # only keep top 50 words
+        max_features=30  # only keep top 30 words
     )
     print("vectoriser at work")
 
@@ -89,7 +89,7 @@ def tf_idf_keywords(user_text,redundancy_threshold=15):
 
     for i in range(len(sentences)):
         scores = tfidf_matrix[i].toarray()[0]
-        top_indices = np.argsort(scores)[-5:][::-1]  # Get top 5 words
+        top_indices = np.argsort(scores)[-3:][::-1]  # Get top 3 words
         all_top_words.update(feature_names[j] for j in top_indices)
 
     return __remove_redundant_keywords(list(all_top_words), redundancy_threshold)

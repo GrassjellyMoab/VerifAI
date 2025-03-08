@@ -1,6 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 from flask import Blueprint, request, jsonify
+import io
+import PyPDF2
+import concurrent.futures
 
 scrape_content_blueprint = Blueprint("scrape_content_blueprint", __name__)
 
@@ -42,8 +45,6 @@ def extract_main_content(url, headers=None):
         elif 'xml' in content_type.lower():
             # Process XML content
             soup = BeautifulSoup(response.text, "xml")
-            # Depending on the XML structure, you may customize extraction.
-            # Here, we extract all text content from the XML.
             extracted_text = soup.get_text(strip=True)
             if extracted_text:
                 print("Content scrap successful (XML)")
@@ -51,9 +52,26 @@ def extract_main_content(url, headers=None):
             else:
                 return "Main content not found in XML."
 
+        # PDF branch
+        elif 'pdf' in content_type.lower() or url.lower().endswith('.pdf'):
+            try:
+                pdf_data = io.BytesIO(response.content)
+                reader = PyPDF2.PdfReader(pdf_data, strict=False)
+                extracted_text = ""
+                for page in reader.pages:
+                    text = page.extract_text()
+                    if text:
+                        extracted_text += text + "\n"
+                if extracted_text:
+                    print("Content scrap successful (PDF)")
+                    return extracted_text
+                else:
+                    return "Main content not found in PDF."
+            except Exception as pdf_error:
+                return f"Error processing PDF: {str(pdf_error)}"
+
         else:
-            # Return a message if the content is neither HTML nor XML
-            return f"Content is neither HTML nor XML. Detected content type: {content_type}"
+            return f"Content is neither HTML, XML, nor PDF. Detected content type: {content_type}"
 
     except requests.exceptions.RequestException as e:
         return f"Error retrieving content: {str(e)}"
@@ -63,23 +81,31 @@ def extract_main_content(url, headers=None):
 
 @scrape_content_blueprint.route("/", methods=["POST"])
 def scrape_content():
-    """Fetches and extracts the main body of an article from a given URL."""
+    """Fetches and extracts the main body of an article from a given URL concurrently."""
     data = request.get_json()
     urls = data.get("results")  # list of dicts: {title: title, url: url, reliability: r}
     return_data = []
 
-    for item in urls:
-        url = item.get("url")
-        reliability = item.get("reliability")
+    if not urls:
+        return jsonify({"error": "No URL data provided"}), 400
 
-        if not url:
-            return jsonify({"error": "URL is required"}), 400
+    # Use a ThreadPoolExecutor to process URLs concurrently
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        # Submit tasks for each URL extraction
+        future_to_item = {
+            executor.submit(extract_main_content, item.get("url")): item for item in urls if item.get("url")
+        }
 
-        article_content = extract_main_content(url)
-        return_data.append({
-            "url": url,
-            "reliability": reliability,
-            "article_content": article_content
-        })
+        for future in concurrent.futures.as_completed(future_to_item):
+            item = future_to_item[future]
+            try:
+                content = future.result()
+            except Exception as exc:
+                content = f"Error during extraction: {exc}"
+            return_data.append({
+                "url": item.get("url"),
+                "reliability": item.get("reliability"),
+                "article_content": content
+            })
 
     return jsonify({"results": return_data})

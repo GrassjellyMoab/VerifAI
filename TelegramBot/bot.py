@@ -23,10 +23,10 @@ GLOBAL PARAMETERS FOR MODEL
 """
 
 
-redundancy_threshold = 15
-max_search_count = 20
-min_source_count = 25
-keyword_query_percentage = 0.6
+redundancy_threshold = 10
+max_search_count = 35
+min_source_count = 40
+keyword_query_percentage = 0.4
 max_sites_in_query = 4
 is_singapore_sources = True
 
@@ -160,9 +160,9 @@ def view_parameters(message):
 @bot.message_handler(commands=['reset_parameters'])
 def reset_parameters(message):
     global redundancy_threshold, max_search_count, min_source_count, max_sites_in_query, keyword_query_percentage, is_singapore_sources
-    redundancy_threshold = 15
-    max_search_count = 20
-    min_source_count = 25
+    redundancy_threshold = 10
+    max_search_count = 35
+    min_source_count = 40
     keyword_query_percentage = 0.4
     max_sites_in_query = 4
     is_singapore_sources = True
