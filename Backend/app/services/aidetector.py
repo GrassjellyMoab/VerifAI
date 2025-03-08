@@ -2,16 +2,18 @@ import requests
 import os
 import argparse
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+load_dotenv()
 
 # Your API key from AIORNOT 
-API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjM4YWNjNzJkLTYwMjQtNGZlYS04ZGIxLTA4ZjY5N2IwODgwMiIsInVzZXJfaWQiOiIzOGFjYzcyZC02MDI0LTRmZWEtOGRiMS0wOGY2OTdiMDg4MDIiLCJhdWQiOiJhY2Nlc3MiLCJleHAiOjAuMH0.WiqURlGO3Xrc10Mqv93yfpuTKtnK2CTlsZ1hWLppBKA"
+AIorNOT_KEY = os.getenv("AIORNOT_KEY")
 
 # Base URL for the API
 BASE_URL = "https://api.aiornot.com/v1"
 
 # Headers for authentication
 headers = {
-    "Authorization": f"Bearer {API_KEY}",
+    "Authorization": f"Bearer {AIorNOT_KEY}",
     "Accept": "application/json"
 }
 

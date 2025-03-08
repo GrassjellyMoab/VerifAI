@@ -24,8 +24,6 @@ def reliability_check(min_score, max_score, min_article, max_article):
     if max_score > 0.60:
         return f"There is strong evidence that the claim is reliable. The source: backs it up. \n\n source URL: {max_article}"
 
-
-
 def reliability_model(message, user_text, bot,
                       redundancy_threshold=15,  # tf - idf parameter
                       max_search_count=20, min_source_count=25,
