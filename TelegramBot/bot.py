@@ -33,13 +33,13 @@ def reliability_calculator(message, user_text):
             data = response.json()
             score = data.get("score", "N/A")
             keywords = data.get("keywords", " ")
-            reply_msg = f"Reliability: {score}%\n\nKeywords: {keywords}"
+            reply_msg = f"Extracting Key Words:%\n\nKeywords: {keywords}"
         else:
             reply_msg = "Error verifying. Server responded with an error."
     except Exception as e:
         reply_msg = f"Error: {e}"
     #WORKS TILL HERE
-    bot.reply_to(message, reply_msg)
+    bot.send_message(message.chat.id, reply_msg)
     """
     till this point was doing tf-idf
     """
@@ -50,6 +50,7 @@ def reliability_calculator(message, user_text):
     {"results": list of data in json format}
     is the json format 
     """
+    bot.send_message(message.chat.id, "Finding Sources...")
     payload2 = {"keywords": keywords}
     try:
         response = requests.post(scrape_url, json=payload2)
@@ -66,8 +67,8 @@ def reliability_calculator(message, user_text):
         reply_data = f"Error: {e}"
 
 
-    bot.reply_to(message, reply_data)
-
+    bot.send_message(message.chat.id, reply_data)
+    bot.send_message(message.chat.id, "extracting content of sources...")
     #WORKS TILL HERE
 
     """
@@ -86,7 +87,7 @@ def reliability_calculator(message, user_text):
     except Exception as e:
         reply_data = f"Error: {e}"
 
-    bot.reply_to(message, "Success")
+    bot.send_message(message.chat.id, "finished extracting articles content...")
 
 
     """
@@ -94,6 +95,7 @@ def reliability_calculator(message, user_text):
     now embedding:
     
     """
+    bot.send_message(message.chat.id, "analysing content...")
     payload4 = {"input_text": user_text,
                 "article_info": results}
     try:
@@ -111,7 +113,7 @@ def reliability_calculator(message, user_text):
                            "vector": article_vec}
             """
 
-            bot.reply_to(message, f"score is: {score}")
+            bot.send_message(message.chat.id, f"score is: {score}")
         else:
             reply_data = "Error in embedding. Server responded with an error."
     except Exception as e:
