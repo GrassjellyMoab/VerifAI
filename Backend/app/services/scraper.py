@@ -183,7 +183,7 @@ def verify_keywords_with_sources():
 
 
     verified_results = []
-    allowed_tlds = [".com", ".sg", ".org"]
+    seen_urls = set()
 
     pattern = r"(mothership\.sg|who\.int|who\.org|un\.org|europa\.eu|imf\.org|worldbank\.org|oecd\.org|edu\.sg|ac\.sg|moh\.gov\.sg|mom\.gov\.sg|mas\.gov\.sg|mha\.gov\.sg|nea\.gov\.sg|ica\.gov\.sg|singstat\.gov\.sg|police\.gov\.sg|straitstimes\.com|channelnewsasia\.com|todayonline\.com|zaobao\.com\.sg|businesstimes\.com\.sg|cdc\.gov|nih\.gov|fda\.gov|epa\.gov|ftc\.gov|consumer\.ftc\.gov|usa\.gov|bbc\.com|bbc\.co\.uk|reuters\.com|apnews\.com|theguardian\.com|nytimes\.com|washingtonpost\.com|cnn\.com|npr\.org|wsj\.com|bloomberg\.com|abcnews\.go\.com|cbsnews\.com|nbcnews\.com|latimes\.com|snopes\.com|factcheck\.org|politifact\.com|fullfact\.org|truthout\.org|sciencedirect\.com|nature\.com|sciencemag\.org|nationalgeographic\.com|newscientist\.com|malwarebytes\.com|kaspersky\.com|mcafee\.com|forbes\.com)"
 
@@ -200,7 +200,7 @@ def verify_keywords_with_sources():
             import random
 
 
-            random_keys = random.sample(keywords, int(keyword_query_percentage*(len(keywords)-1)) )
+            random_keys = random.choices(keywords, k=int(keyword_query_percentage*(len(keywords)-1)))
             base_query = " ".join(random_keys)
             if counter == 1:
                 search_query = f"{base_query} (site:mothership.sg)"
@@ -223,6 +223,11 @@ def verify_keywords_with_sources():
                 match = re.search(pattern, url)
                 if url.lower().endswith(".pdf"):
                     continue
+
+                if url in seen_urls:
+                    continue
+
+                seen_urls.add(url)
                 if match:
                     if is_credible(domain) == 1:
                         verified_results.append({

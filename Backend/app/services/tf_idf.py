@@ -50,7 +50,7 @@ def __stop_words_removing_processor(user_input):
     for sentence in user_input:
         words = sentence.split()
         filtered_words = [
-            word for word in words
+            word.lower() for word in words
             if word.lower() not in stop_words and not any(char.isdigit() for char in word)
         ]
         pre_tf_idf_keywords.append(filtered_words)

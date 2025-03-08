@@ -70,6 +70,8 @@ def reliability_model(message, user_text, bot,
                 if len(return_data) < 3000:
                     title = result.get("title", "")
                     url = result.get("url", "")
+                    if url.endswith(".xml"):
+                        continue
                     if pattern_extension.search(url):
                         return_data += f"{title}\nlink: {url}\n\n\n"
 

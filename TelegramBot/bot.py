@@ -150,7 +150,9 @@ def view_parameters(message):
               f" min_source_count        :  {min_source_count}\n"\
               f"max_sites_in_query       : {max_sites_in_query}\n"\
               f"keyword_query_percentage : {keyword_query_percentage}\n"\
-              f"max_sites_in_query       : {max_sites_in_query}\n"
+              f"max_sites_in_query       : {max_sites_in_query}\n"\
+              f"is_singapore_sources   : {is_singapore_sources}\n"
+
 
       bot.reply_to(message, reply)
 
@@ -161,7 +163,7 @@ def reset_parameters(message):
     redundancy_threshold = 15
     max_search_count = 20
     min_source_count = 25
-    keyword_query_percentage = 0.6
+    keyword_query_percentage = 0.4
     max_sites_in_query = 4
     is_singapore_sources = True
     bot.reply_to(message, "resetting parameters...")
