@@ -34,6 +34,7 @@ CREDIBLE_DOMAINS = [
     ".ac.sg",  # some academic subdomains
 
     # -- Singapore News Outlets --
+    "mothership.sg",
     "straitstimes.com",
     "channelnewsasia.com",
     "todayonline.com",
@@ -82,6 +83,20 @@ CREDIBLE_DOMAINS = [
     # --- Additional TLD patterns or country-specific G/NGOs may follow ---
 ]
 
+SINGAPORE_DOMAIN = [
+    ".gov.sg",  # covers moh.gov.sg, mom.gov.sg, etc.
+    "gov.sg",  # top-level domain
+    ".edu.sg",  # e.g., nus.edu.sg, ntu.edu.sg
+    ".ac.sg",  # some academic subdomains
+
+    # -- Singapore News Outlets --
+    "mothership.sg",
+    "straitstimes.com",
+    "channelnewsasia.com",
+    "todayonline.com",
+    "zaobao.com.sg",
+    "businesstimes.com.sg",
+]
 
 def get_domain(url: str) -> str:
     """Extracts the domain from a given URL."""
@@ -126,17 +141,6 @@ def google_custom_search(query, num_results=10):
     return results
 
 
-def google_search(query, num_results=10):
-    """
-    Performs a free Google search by scraping results.
-
-    Warning: This is an unofficial method and may lead to CAPTCHAs or rate limiting.
-    """
-    results = []
-    # The 'pause' parameter adds a delay between requests to help avoid rate limiting.
-    for url in search(query):
-        results.append(url)
-    return results
 
 def generate_credible_filter(credible_domains, max_sites=5):
     """
@@ -146,8 +150,8 @@ def generate_credible_filter(credible_domains, max_sites=5):
     # Use only domains that don't start with a dot (full domains)
     import random
     sites = []
-    for i in range(8):
-        sites.append(CREDIBLE_DOMAINS[random.randrange(len(CREDIBLE_DOMAINS))])
+    for i in range(max_sites):
+        sites.append(credible_domains[random.randrange(len(credible_domains))])
 
 
     return " OR ".join([f"site:{site}" for site in sites])
@@ -156,11 +160,22 @@ def generate_credible_filter(credible_domains, max_sites=5):
 def verify_keywords_with_sources():
     data = request.get_json()
     keywords = data.get("keywords", "")
+    max_search_count = data.get("max_search_count", 20)
+    min_source_count = data.get("min_source_count", 25)
+    keyword_query_percentage = data.get("keyword_query_percentage", 0.8)
+    max_sites_in_query = data.get("max_sites_in_query", 5)
+    is_singapore_sources = data.get("is_singapore_sources", False)
+
+
+
+    if keyword_query_percentage > 1 or keyword_query_percentage < 0.2:
+        keyword_query_percentage = 0.5
+
+
     if not keywords:
         return jsonify({"error": "No keywords provided"}), 400
 
     # Combine keywords into a base search query
-
 
     # Generate a credible filter from a subset of credible domains
 
@@ -170,31 +185,44 @@ def verify_keywords_with_sources():
     verified_results = []
     allowed_tlds = [".com", ".sg", ".org"]
 
-
-    pattern = r"(who\.int|who\.org|un\.org|europa\.eu|imf\.org|worldbank\.org|oecd\.org|edu\.sg|ac\.sg|moh\.gov\.sg|mom\.gov\.sg|mas\.gov\.sg|mha\.gov\.sg|nea\.gov\.sg|ica\.gov\.sg|singstat\.gov\.sg|police\.gov\.sg|straitstimes\.com|channelnewsasia\.com|todayonline\.com|zaobao\.com\.sg|businesstimes\.com\.sg|cdc\.gov|nih\.gov|fda\.gov|epa\.gov|ftc\.gov|consumer\.ftc\.gov|usa\.gov|bbc\.com|bbc\.co\.uk|reuters\.com|apnews\.com|theguardian\.com|nytimes\.com|washingtonpost\.com|cnn\.com|npr\.org|wsj\.com|bloomberg\.com|abcnews\.go\.com|cbsnews\.com|nbcnews\.com|latimes\.com|snopes\.com|factcheck\.org|politifact\.com|fullfact\.org|truthout\.org|sciencedirect\.com|nature\.com|sciencemag\.org|nationalgeographic\.com|newscientist\.com|malwarebytes\.com|kaspersky\.com|mcafee\.com|forbes\.com)"
-    url = "https://www.who.int/news/world-xyz"
+    pattern = r"(mothership\.sg|who\.int|who\.org|un\.org|europa\.eu|imf\.org|worldbank\.org|oecd\.org|edu\.sg|ac\.sg|moh\.gov\.sg|mom\.gov\.sg|mas\.gov\.sg|mha\.gov\.sg|nea\.gov\.sg|ica\.gov\.sg|singstat\.gov\.sg|police\.gov\.sg|straitstimes\.com|channelnewsasia\.com|todayonline\.com|zaobao\.com\.sg|businesstimes\.com\.sg|cdc\.gov|nih\.gov|fda\.gov|epa\.gov|ftc\.gov|consumer\.ftc\.gov|usa\.gov|bbc\.com|bbc\.co\.uk|reuters\.com|apnews\.com|theguardian\.com|nytimes\.com|washingtonpost\.com|cnn\.com|npr\.org|wsj\.com|bloomberg\.com|abcnews\.go\.com|cbsnews\.com|nbcnews\.com|latimes\.com|snopes\.com|factcheck\.org|politifact\.com|fullfact\.org|truthout\.org|sciencedirect\.com|nature\.com|sciencemag\.org|nationalgeographic\.com|newscientist\.com|malwarebytes\.com|kaspersky\.com|mcafee\.com|forbes\.com)"
 
     counter = 0
-    while (len({item['url'] for item in verified_results}) < 20):
-        time.sleep(2)
-        if counter >= 15:
+    while len({item['url'] for item in verified_results}) < min_source_count:
+        time.sleep(1)
+        if counter >= max_search_count:
             break
 
         counter += 1
-        print(counter)
+
         try:
+
             import random
 
-            random_keys = random.sample(keywords, 3*(len(keywords)-1) // 4 )
+
+            random_keys = random.sample(keywords, int(keyword_query_percentage*(len(keywords)-1)) )
             base_query = " ".join(random_keys)
-            credible_filter = generate_credible_filter(CREDIBLE_DOMAINS, max_sites=15)
-            search_query = f"{base_query} ({credible_filter})"
+            if counter == 1:
+                search_query = f"{base_query} (site:mothership.sg)"
+                print("here")
+            else:
+                if is_singapore_sources:
+                    credible_filter = generate_credible_filter(SINGAPORE_DOMAIN, max_sites=3)
+                else:
+                    credible_filter = generate_credible_filter(CREDIBLE_DOMAINS, max_sites=max_sites_in_query)
+                search_query = f"{base_query} ({credible_filter} OR {credible_filter})"
+
+            print(f"query: {search_query}")
             search_results = google_custom_search(search_query)
-            print(search_results, counter)
+            print(f"search number: {counter}\n"
+                  f"{search_results}")
+
             for result in search_results:
                 url = result.get("url")
                 domain = get_domain(url)
                 match = re.search(pattern, url)
+                if url.lower().endswith(".pdf"):
+                    continue
                 if match:
                     if is_credible(domain) == 1:
                         verified_results.append({
@@ -202,12 +230,7 @@ def verify_keywords_with_sources():
                             "url": url,
                             "reliability": 1
                         })
-                    else:
-                        verified_results.append({
-                            "title": result.get("title", "No Title Found"),
-                            "url": url,
-                            "reliability": -1
-                        })
+
         finally:
             pass
 

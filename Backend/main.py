@@ -1,10 +1,10 @@
 # main.py
 from flask import Flask
-from app.controllers.verify_controller import verify_blueprint
-from app.services.choonggi_trying.scraper import scrape_blueprint
+from app.services.tf_idf import verify_blueprint
+from scraper import scrape_blueprint
 
-from app.services.choonggi_trying.content_scraper import scrape_content_blueprint
-from app.services.choonggi_trying.embedding import embedding_blueprint
+from content_scraper import scrape_content_blueprint
+from embedding import embedding_blueprint
 
 
 def create_app():

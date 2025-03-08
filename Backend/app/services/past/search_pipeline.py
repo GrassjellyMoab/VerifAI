@@ -1,7 +1,7 @@
 # search_pipeline.py
 
 from web_search import perform_web_search
-from filter_results import filter_search_results
+from past.filter_results import filter_search_results
 # Optional: if you want to scrape each credible link,
 # you could also import a scraping function here.
 # from app.services.scraping import scrape_articles

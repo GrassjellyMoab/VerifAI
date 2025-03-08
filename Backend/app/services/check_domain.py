@@ -6,6 +6,7 @@ CREDIBLE_DOMAINS = [
     ".edu",          # US educational institutions
     ".ac.",          # academic subdomains in some countries (e.g. .ac.uk)
     ".gov.",         # e.g. .gov.uk, .gov.sg
+"mothership.sg",
 
     # --- International orgs and agencies ---
     "who.int",       # World Health Organization
@@ -43,6 +44,7 @@ CREDIBLE_DOMAINS = [
 
     # -- Singapore News Outlets --
     "straitstimes.com",
+    "mothership.sg",
     "channelnewsasia.com",
     "todayonline.com",
     "zaobao.com.sg",

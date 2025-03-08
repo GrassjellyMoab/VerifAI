@@ -1,7 +1,10 @@
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
-
+import nltk
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+from flask import Blueprint, request, jsonify
 
 def __basic_tokenisation(text):
     sentences = re.split('[.!?]', text)
@@ -19,11 +22,14 @@ def __dynamic_max_df(sentences, base_threshold=0.85, min_threshold=0.5):
         return max(min_threshold, base_threshold - (num_sentences * 0.01))  # Reduce max_df dynamically
 
 
-def __remove_redundant_keywords(keywords):
+def __remove_redundant_keywords(keywords, redundancy_threshold=15):
     """
     with TF-IDF and allowing bigrams, we get output like "money account" and "account" in the same result
     so we remove "account" and "money" from keywords
     """
+    if len(keywords) <= redundancy_threshold:
+        return keywords
+
     keywords = sorted(keywords, key=len, reverse=True)  # Sort by length (longest first)
     unique_keywords = []
 
@@ -33,13 +39,37 @@ def __remove_redundant_keywords(keywords):
 
     return unique_keywords
 
+def __stop_words_removing_processor(user_input):
+    """
+    Parses input manually without using tf-idf;
+    used for small input by users.
+    Excludes stop words and words that contain numbers.
+    """
+    pre_tf_idf_keywords = []
+    stop_words = set(stopwords.words('english'))
+    for sentence in user_input:
+        words = sentence.split()
+        filtered_words = [
+            word for word in words
+            if word.lower() not in stop_words and not any(char.isdigit() for char in word)
+        ]
+        pre_tf_idf_keywords.append(filtered_words)
+    return pre_tf_idf_keywords
 
-def tf_idf_keywords(user_text):
+def tf_idf_keywords(user_text,redundancy_threshold=15):
     """
     used to find keywords in user text of the news. will return highlighted keywords.
     """
     # Tokenize into sentences
     sentences = __basic_tokenisation(user_text)  # split into words
+    extracted = __stop_words_removing_processor(sentences)
+    all_top_words = set()
+
+    print("stopwords at work")
+    for sentence in extracted:
+        all_top_words.update(word for word in sentence)
+
+
     max_df = __dynamic_max_df(sentences)
     # Use TF-IDF to identify important sentences
     vectorizer = TfidfVectorizer(
@@ -50,17 +80,39 @@ def tf_idf_keywords(user_text):
         min_df=1,  # ignore words only appearing once
         max_features=50  # only keep top 50 words
     )
+    print("vectoriser at work")
 
     tfidf_matrix = vectorizer.fit_transform(sentences)
 
     feature_names = vectorizer.get_feature_names_out()
 
-    all_top_words = set()
+
     for i in range(len(sentences)):
         scores = tfidf_matrix[i].toarray()[0]
         top_indices = np.argsort(scores)[-5:][::-1]  # Get top 5 words
         all_top_words.update(feature_names[j] for j in top_indices)
 
-    return __remove_redundant_keywords(list(all_top_words))
+    return __remove_redundant_keywords(list(all_top_words), redundancy_threshold)
 
 
+verify_blueprint = Blueprint("verify_blueprint", __name__)
+
+
+
+@verify_blueprint.route("/", methods=["POST"])
+def verify_claim():
+    data = request.get_json()
+    user_text = data.get("text", "")
+    redundancy_threshold = data.get("redundancy_threshold", 15)
+    # find term keywords using TF - IDF then do the search
+    keywords = tf_idf_keywords(user_text,redundancy_threshold)
+
+    # Then do your search:
+    # search_results = perform_web_search(user_text)
+    # print(search_results)
+
+
+
+    return jsonify({
+        "keywords": keywords  # Convert set to list for JSON response
+    })
