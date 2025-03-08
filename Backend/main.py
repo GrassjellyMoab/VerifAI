@@ -20,7 +20,20 @@ def create_app():
 
 
 if __name__ == "__main__":
-    app = create_app()
-    # Run on port 5000 by default
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    from TelegramBot.bot import start_bot
+    import threading
 
+    app = create_app()
+
+    thread1 = threading.Thread(target=start_bot)
+    thread2 = threading.Thread(target=app.run, kwargs={
+        "debug": True,
+        "host": "0.0.0.0",
+        "port": 5000,
+        "use_reloader": False
+    })
+
+    thread1.start()
+    thread2.start()
+    thread1.join()
+    thread2.join()
