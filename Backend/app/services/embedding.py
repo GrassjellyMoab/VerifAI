@@ -44,6 +44,9 @@ def compute_credibility_score():
     input_vec = embed_text(input_text)
     total_score = 0.0
     return_vec = []
+    if not _:
+        return jsonify({"credibility_score": total_score})
+
     for article in _:
         url = article.get("url")
         reliability = article.get("reliability")
