@@ -31,9 +31,8 @@ def reliability_calculator(message, user_text):
         response = requests.post(verify_url, json=payload)
         if response.status_code == 200:
             data = response.json()
-            score = data.get("score", "N/A")
             keywords = data.get("keywords", " ")
-            reply_msg = f"Extracting Key Words:%\n\nKeywords: {keywords}"
+            reply_msg = f"Extracting Key Words:\n\nKeywords: {keywords}"
         else:
             reply_msg = "Error verifying. Server responded with an error."
     except Exception as e:
