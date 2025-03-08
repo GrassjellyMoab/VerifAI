@@ -6,10 +6,10 @@ from PIL import Image
 import telebot
 from dotenv import load_dotenv
 
-verify_url = "http://localhost:5000/verify"
-scrape_url = "http://localhost:5000/scrape"
-scrape_content_url = "http://localhost:5000/scrape_content"
-embedding_url = "http://localhost:5000/embedding"
+verify_url = "http://localhost:5050/verify"
+scrape_url = "http://localhost:5050/scrape"
+scrape_content_url = "http://localhost:5050/scrape_content"
+embedding_url = "http://localhost:5050/embedding"
 
 def reliability_check(min_score, max_score, min_article, max_article):
     if min_score < -0.3:

@@ -6,8 +6,8 @@ from urllib.parse import urlparse
 from flask import Blueprint, request, jsonify
 import re
 
-from check_domain import is_credible # your is_credible function
-from googlesearch import search
+from app.services.check_domain import is_credible  # your is_credible function
+
 from dotenv import load_dotenv
 load_dotenv()
 scrape_blueprint = Blueprint("scrape_blueprint", __name__)
