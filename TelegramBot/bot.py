@@ -7,6 +7,7 @@ import pytesseract as te
 from PIL import Image
 import telebot
 from dotenv import load_dotenv
+from app.controllers.model import reliability_model
 
 # 1) Load .env if you have it in the project root or telegram_bot folder
 load_dotenv()  # Adjust path as needed if .env is at a different level
@@ -17,147 +18,179 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 # 3) Initialize TeleBot
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# 4) The URL where your Flask backend runs
-#    If you run Flask locally: e.g. "http://localhost:5000/verify"
-verify_url = "http://localhost:5000/verify"
-scrape_url = "http://localhost:5000/scrape"
-scrape_content_url = "http://localhost:5000/scrape_content"
-embedding_url = "http://localhost:5000/embedding"
+"""
+GLOBAL PARAMETERS FOR MODEL
+"""
 
 
-def reliability_model(message, user_text,
-                           redundancy_threshold=15, #tf - idf parameter
-           max_search_count=20, min_source_count=25,
-                      keyword_query_percentage= 0.6, max_sites_in_query=4,
-                      is_singapore_sources=True #scraper parameters
-                           ):
+redundancy_threshold = 15
+max_search_count = 20
+min_source_count = 25
+keyword_query_percentage = 0.6
+max_sites_in_query = 4
+is_singapore_sources = True
 
 
-    global keywords, reply_data, results, score, return_data
-    payload = {"text": user_text,
-               "redundancy_threshold": redundancy_threshold  # how many keywords are required to simplify keyword searches; default 15
-               }
+def call_model(message, user_text):
+    reliability_model(message, user_text,bot,
+                      redundancy_threshold=redundancy_threshold,
+                      max_search_count=max_search_count,
+                      min_source_count=min_source_count,
+                      max_sites_in_query=max_sites_in_query,
+                      keyword_query_percentage=keyword_query_percentage,
+                      is_singapore_sources=is_singapore_sources)
+
+
+
+
+# Helper function to send usage instructions
+def send_usage(message, command, usage):
+    bot.reply_to(message, f"Usage: /{command} {usage}")
+
+# Command to set redundancy_threshold (integer)
+@bot.message_handler(commands=['set_redundancy_threshold'])
+def set_redundancy_threshold(message):
+    global redundancy_threshold
+    parts = message.text.split()
+    if len(parts) != 2:
+        send_usage(message, "set_redundancy_threshold", "<integer>")
+        return
     try:
-        response = requests.post(verify_url, json=payload)
-        if response.status_code == 200:
-            data = response.json()
-            keywords = data.get("keywords", " ")
-            reply_msg = f"Extracting Key Words:\n\nKeywords: {keywords}"
-        else:
-            reply_msg = "Error verifying. Server responded with an error."
-    except Exception as e:
-        reply_msg = f"Error: {e}"
-    #WORKS TILL HERE
-    bot.send_message(message.chat.id, reply_msg)
-    """
-    till this point was doing tf-idf
-    """
+        value = int(parts[1])
+        redundancy_threshold = value
+        bot.reply_to(message, f"redundancy_threshold set to {value}.")
+    except ValueError:
+        bot.reply_to(message, "Please provide a valid integer.")
 
-
-    """
-    scraper 
-    {"results": list of data in json format}
-    is the json format 
-    """
-
-    bot.send_message(message.chat.id, "Finding Sources...")
-    payload2 = {"keywords": keywords,
-                "max_search_count": max_search_count,
-                "min_source_count" : min_source_count,
-                "keyword_query_percentage": keyword_query_percentage,
-                "max_sites_in_query": max_sites_in_query,
-                "is_singapore_sources": is_singapore_sources
-    }
-    import re
-    pattern_extension = re.compile(r"(\.com(?:/|$)|\.html?(?:/|$))", re.IGNORECASE)
-
+# Command to set max_search_count (integer)
+@bot.message_handler(commands=['set_max_search_count'])
+def set_max_search_count(message):
+    global max_search_count
+    parts = message.text.split()
+    if len(parts) != 2:
+        send_usage(message, "set_max_search_count", "<integer>")
+        return
     try:
-        response = requests.post(scrape_url, json=payload2)
+        value = int(parts[1])
+        max_search_count = value
+        bot.reply_to(message, f"max_search_count set to {value}.")
+    except ValueError:
+        bot.reply_to(message, "Please provide a valid integer.")
 
-        if response.status_code == 200:
-            data = response.json()
-
-            results = data.get("results", "N/A")
-            print(f"here:: {results}")
-            return_data = ""
-            for result in results:
-                if len(return_data) < 3000:
-                    title = result.get("title", "")
-                    url = result.get("url", "")
-                    if pattern_extension.search(url):
-                        return_data += f"{title}\nlink: {url}\n\n\n"
-
-        else:
-            reply_msg = "Error verifying. Server responded with an error."
-    except Exception as e:
-        reply_data = f"Error: {e}"
-
-
-    bot.send_message(message.chat.id, return_data)
-    bot.send_message(message.chat.id, "extracting content of sources...")
-    #WORKS TILL HERE
-
-    """
-    content Scraper
-    """
-
-    payload3 = {"results": results}
+# Command to set min_source_count (integer)
+@bot.message_handler(commands=['set_min_source_count'])
+def set_min_source_count(message):
+    global min_source_count
+    parts = message.text.split()
+    if len(parts) != 2:
+        send_usage(message, "set_min_source_count", "<integer>")
+        return
     try:
-        response = requests.post(scrape_content_url, json=payload3)
-        if response.status_code == 200:
-            data = response.json()
-            results = data.get("results", "N/A")
+        value = int(parts[1])
+        min_source_count = value
+        bot.reply_to(message, f"min_source_count set to {value}.")
+    except ValueError:
+        bot.reply_to(message, "Please provide a valid integer.")
 
-
-        else:
-            reply_msg = "Error scraping. Server responded with an error."
-    except Exception as e:
-        reply_data = f"Error: {e}"
-
-    bot.send_message(message.chat.id, "finished extracting articles content...")
-
-
-    """
-    works till here
-    now embedding:
-    
-    """
-    bot.send_message(message.chat.id, "analysing content...")
-    payload4 = {"input_text": user_text,
-                "article_info": results}
+# Command to set keyword_query_percentage (float between 0 and 1)
+@bot.message_handler(commands=['set_keyword_query_percentage'])
+def set_keyword_query_percentage(message):
+    global keyword_query_percentage
+    parts = message.text.split()
+    if len(parts) != 2:
+        send_usage(message, "set_keyword_query_percentage", "<float between 0 and 1>")
+        return
     try:
-        response = requests.post(embedding_url, json=payload4)
+        value = float(parts[1])
+        if value < 0 or value > 1:
+            bot.reply_to(message, "Value must be between 0 and 1.")
+            return
+        keyword_query_percentage = value
+        bot.reply_to(message, f"keyword_query_percentage set to {value}.")
+    except ValueError:
+        bot.reply_to(message, "Please provide a valid float between 0 and 1.")
 
-        data = response.json()
-        results = data.get("results", "N/A")  # all articles info
-        input_vector = data.get("input_vector", "N/A")
-        score = data.get("score", "N/A")
-        """
-        list of {"url": url,
-                        "reliability": reliability,
-                        "article_content": article_content,
-                       "similarity": sim,
-                       "vector": article_vec}
-        """
+# Command to set max_sites_in_query (integer)
+@bot.message_handler(commands=['set_max_sites_in_query'])
+def set_max_sites_in_query(message):
+    global max_sites_in_query
+    parts = message.text.split()
+    if len(parts) != 2:
+        send_usage(message, "set_max_sites_in_query", "<integer>")
+        return
+    try:
+        value = int(parts[1])
+        max_sites_in_query = value
+        bot.reply_to(message, f"max_sites_in_query set to {value}.")
+    except ValueError:
+        bot.reply_to(message, "Please provide a valid integer.")
 
-        bot.send_message(message.chat.id, f"score is: {score}")
+# Command to set is_singapore_sources (boolean)
+@bot.message_handler(commands=['set_is_singapore_sources'])
+def set_is_singapore_sources(message):
+    global is_singapore_sources
+    parts = message.text.split()
+    if len(parts) != 2:
+        send_usage(message, "set_is_singapore_sources", "<true/false>")
+        return
+    value_str = parts[1].lower()
+    if value_str in ["true", "1", "yes"]:
+        is_singapore_sources = True
+        bot.reply_to(message, "is_singapore_sources set to True.")
+    elif value_str in ["false", "0", "no"]:
+        is_singapore_sources = False
+        bot.reply_to(message, "is_singapore_sources set to False.")
+    else:
+        bot.reply_to(message, "Please provide a valid boolean value: true or false.")
 
-    except Exception as e:
-        reply_data = f"Error: {e}"
+@bot.message_handler(commands=['view_parameters'])
+def view_parameters(message):
+      reply = f"redundancy_threshold     : {redundancy_threshold}  \n"\
+              f"max_search_count         :  {max_search_count} \n"\
+              f" min_source_count        :  {min_source_count}\n"\
+              f"max_sites_in_query       : {max_sites_in_query}\n"\
+              f"keyword_query_percentage : {keyword_query_percentage}\n"\
+              f"max_sites_in_query       : {max_sites_in_query}\n"
+
+      bot.reply_to(message, reply)
 
 
+@bot.message_handler(commands=['reset_parameters'])
+def reset_parameters(message):
+    global redundancy_threshold, max_search_count, min_source_count, max_sites_in_query, keyword_query_percentage, is_singapore_sources
+    redundancy_threshold = 15
+    max_search_count = 20
+    min_source_count = 25
+    keyword_query_percentage = 0.6
+    max_sites_in_query = 4
+    is_singapore_sources = True
+    bot.reply_to(message, "resetting parameters...")
+    view_parameters(message)
 
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "Hello! Send me a piece of text or a link, and I'll check reliability.")
+    welcome_text = (
+        "Hello! I'm your reliability bot.\n"
+        "You can set parameters with the following commands:\n"
+        "/set_redundancy_threshold <integer>\n"
+        "/set_max_search_count <integer>\n"
+        "/set_min_source_count <integer>\n"
+        "/set_keyword_query_percentage <float between 0 and 1>\n"
+        "/set_max_sites_in_query <integer>\n"
+        "/set_is_singapore_sources <true/false>\n"
+        "/reset_parameters\n"
+        "/view_parameters\n\n"
+        "Send me a piece of text or a link, and I'll check reliability."
+    )
+    bot.reply_to(message, welcome_text)
 
 
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
     user_text = message.text
     # 5) Send text to your backend /verify endpoint
-    reliability_model(message, user_text)
+    call_model(message, user_text)
 
 
 @bot.message_handler(content_types=['photo'])
@@ -205,7 +238,8 @@ def handle_photo(message):
 
 
         # send to backend
-        reliability_model(message, user_text)
+        call_model(message, user_text)
+
 
 
 
