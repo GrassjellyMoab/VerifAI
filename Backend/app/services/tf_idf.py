@@ -43,7 +43,7 @@ def __remove_redundant_keywords(keywords, redundancy_threshold=15):
 
     return unique_keywords
 
-def __stop_words_removing_processor(user_input):
+def __stop_words_removing_processor(sentences):
     """
     Parses input manually without using tf-idf;
     used for small input by users.
@@ -51,7 +51,10 @@ def __stop_words_removing_processor(user_input):
     """
     pre_tf_idf_keywords = []
     stop_words = set(stopwords.words('english'))
-    for sentence in user_input:
+
+
+
+    for sentence in sentences:
         words = sentence.split()
         filtered_words = [
             word.lower() for word in words
@@ -66,10 +69,15 @@ def tf_idf_keywords(user_text,redundancy_threshold=15):
     """
     # Tokenize into sentences
     sentences = __basic_tokenisation(user_text)  # split into words
-    extracted = __stop_words_removing_processor(sentences)
-    all_top_words = set()
+    if len(sentences) >= 2:
+        extracted = __stop_words_removing_processor(sentences)
 
+    else:
+        print(sentences)
+        extracted = [[word.lower() for word in sentences]]
+    all_top_words = set()
     print("stopwords at work")
+
     for sentence in extracted:
         all_top_words.update(word for word in sentence)
 

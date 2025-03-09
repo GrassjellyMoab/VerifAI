@@ -199,8 +199,8 @@ def verify_keywords_with_sources():
             import random
             percentage = (random.uniform(keyword_query_percentage, 0.95))
 
-            if (len(keywords) <= 10):
-                random_keys = keywords
+            if len(keywords) <= 10:
+                random_keys = random.choices(keywords, k=int(0.8*(len(keywords)-1)))
             else:
                 random_keys = random.choices(keywords, k=int(percentage*(len(keywords)-1)))
             base_query = " ".join(random_keys)
