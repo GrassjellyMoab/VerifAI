@@ -129,22 +129,27 @@ def send_welcome(message):
     """
     welcome_text = (
         "Hello, I'm VerifAI!\n\n"
-        "I can verify reliability of texts or check if an image is AI-generated. 🕵️ \n\n"
+        "I can verify reliability of claims or check if an image is AI-generated. 🕵️ \n\n"
         "Choose one of the options below or set my parameters of the bot with the /help command!\n\n"
         "Type /start to see this message again! 😁"
     )
 
     # Create a custom reply keyboard
-    keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    reliability_btn = telebot.types.KeyboardButton("Check Text Reliability")
-    ai_btn = telebot.types.KeyboardButton("Detect AI Image")
-    end_btn = telebot.types.KeyboardButton("End Conversation")
-    keyboard.row(reliability_btn, ai_btn)
-    keyboard.row(end_btn)
+    markup = types.InlineKeyboardMarkup(row_width=1)
+    reliability_btn = types.InlineKeyboardButton("Check Text Reliability 💡", callback_data="reliability_mode")
+    ai_btn = types.InlineKeyboardButton("Detect AI Image 🤖", callback_data="ai_mode")
+    end_btn = types.InlineKeyboardButton("End Conversation", callback_data="end_convo")
+    markup.add(reliability_btn, ai_btn, end_btn)
 
-    bot.send_message(message.chat.id, welcome_text, reply_markup=keyboard)
+    bot.send_message(
+        message.chat.id,
+        welcome_text,
+        reply_markup=markup,
+        parse_mode="HTML"
+    )
     # Initialize user mode to None
     user_mode[message.chat.id] = None
+
 
 
 @bot.message_handler(commands=['help'])
@@ -196,15 +201,28 @@ def send_commands(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handle_command(call):
     """
-    Handle callback from help menu buttons - directly execute commands or prompt for input
+    Handle callback from all inline keyboard buttons
     """
     global redundancy_threshold, max_search_count, min_source_count, max_sites_in_query, keyword_query_percentage, is_singapore_sources
 
     chat_id = call.message.chat.id
     message_id = call.message.message_id
 
+    # Handle welcome menu callbacks
+    if call.data == "reliability_mode":
+        user_mode[chat_id] = "reliability"
+        bot.send_message(chat_id, "You selected: Check Claim Reliability! \n\nSend me text or a image to analyse 🔍")
+
+    elif call.data == "ai_mode":
+        user_mode[chat_id] = "ai"
+        bot.send_message(chat_id, "You selected: Detect AI Image! \n\nPlease send me an image (as a file or photo) 📷")
+
+    elif call.data == "end_convo":
+        user_mode[chat_id] = None
+        bot.send_message(chat_id, "Thanks for using VerifAI! 👋\nType /start to begin again.")
+
     # Handle direct execution commands
-    if call.data == "exec_view_parameters":
+    elif call.data == "exec_view_parameters":
         # Execute view parameters directly
         reply = (
             f"min_source_count         : {min_source_count}\n"
@@ -328,27 +346,10 @@ def process_min_source_input(message):
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
     """
-    Handle text messages. We check if the user clicked one of the buttons or
-    is sending normal text for analysis.
+    Handle text messages for analysis.
     """
     chat_id = message.chat.id
     text = message.text.strip()
-
-    # Check if the user pressed a button
-    if text == "Check Text Reliability":
-        user_mode[chat_id] = "reliability"
-        bot.reply_to(message, "You selected: Check Text Reliability.\nSend me text or a image to analyse.")
-        return
-    elif text == "Detect AI Image":
-        user_mode[chat_id] = "ai"
-        bot.reply_to(message, "You selected: Detect AI Image.\nPlease send me an image (as a file or photo).")
-        return
-    elif text == "End Conversation":
-        user_mode[chat_id] = None
-        # Remove the custom keyboard
-        remove_kb = telebot.types.ReplyKeyboardRemove()
-        bot.send_message(chat_id, "Conversation ended. Type /start to begin again.", reply_markup=remove_kb)
-        return
 
     # If user_mode is reliability, handle it with reliability_model
     if user_mode.get(chat_id) == "reliability":
@@ -357,10 +358,10 @@ def handle_text(message):
     elif user_mode.get(chat_id) == "ai":
         # If the user typed a URL to an image, you can handle it here
         # If it's just text, you might want to inform them to send an image.
-        bot.reply_to(message, "Please send an image as a file or photo for AI detection, or a direct image URL.")
+        bot.reply_to(message, "Please send an image as a file, photo, or a direct image URL for AI detection")
     else:
         # No mode selected
-        bot.reply_to(message, "Please choose an option from the keyboard or type /start.")
+        bot.reply_to(message, "Please choose an option from the /start menu first.")
 
 
 @bot.message_handler(content_types=['photo'])
