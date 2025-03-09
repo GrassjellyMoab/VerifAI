@@ -1,27 +1,44 @@
 # VerifAI Bot
 
-VerifAI is an experimental project developed for Techfest 2025 to help verify the authenticity of information. It features two main models: one for text-based claim verification and another for image authenticity detection.
+VerifAI is an AI-driven Telegram bot desgined to combat misinfomration in private messaging apps such as Telegram. Developed for TechFest 2025, VerifAI utilizes Natural Language Processing and AI-Powered image analysis to detect falsehoods
 
 ---
+## The Problem: Why VerifAi
+65% of adults in Singapore struggle to differentiate between real and fake online content. With false information spreading effortlessly through a single forward button, online falsehoods proliferate at an alarming rate. Meanwhile, existing fact-checking tools remain slow, unreliable, and require tedious manual verification. 
 
-## Overview
-
-VerifAI aims to combat misinformation by combining text analysis techniques with AI-driven image detection. The two models work independently to assess the credibility of claims and visual content.
+## The VerifAI solution 
+VerifAI mitigates misinfomration by providing instant, automated fact-checking directly through a Telegram bot. VerifAI aims to combat misinformation by combining text analysis techniques with AI-driven image detection. The two models work independently to assess the credibility of claims and likelihood of AI generated images respectively.
 
 - **Model 1: Claim Verification**  
   Uses natural language processing to extract keywords from an input claim, finds credible sources via Google Custom Search, scrapes content from various formats (HTML, XML, PDF), embeds both the claim and the sourced content, and then compares their vector representations to assess reliability.
-  **Features:
+  **Features**:
   - **TF-IDF Keyword Extraction:** Identifies key terms from the input claim.
   - **Google Custom Search Integration:** Uses extracted keywords to locate credible online sources.
   - **Content Scraping:** Retrieves text content from various formats (HTML, XML, PDF).
   - **Embedding & Vector Comparison:** Embeds both the claim and scraped content to compare similarity and determine credibility.
+  - **Reliability Score** Provides a reliability score using cosine similarity
+  - **Explanation of Reliability Score** Compares top sources with original claim and leverages OpenAI GPT4-o to provide users with an in-depth explanation of reliability score
 
-- **Model 2: Image Authenticity Detection**
-  One can send the bot an image or URL of an image of it will check whether the given picture is AI-generated. It compares the input image to known patterns and artifacts associated with various AI models and identifies unique characteristics to determine if it is AI-generated or human-made.
+- **Model 2: AI Generator Image Detector**
+  With the rise of AI-generated images and online falsehood, manipulated content are harder to detect. VerifAI allows user to verify images, seperating real images from AI images.
+  **Features**:
+  - **AI-Genereated Image Detection** Determines whether an image is AI-generate and provides a statistical analysis
+  - **Heatmap Visualization** Highlights manipulated areas in AI-generated images for better transparency
 
 ---
 
 ## Requirements
+
+| **Category**                 | **Technology Used**                           |
+|------------------------------|----------------------------------------------|
+| **Programming Language**     | Python 3.x                                   |
+| **Natural Language Processing** | `scikit-learn`, `TF-IDF`, `spaCy`    |
+| **Web Scraping & Data Extraction** | `BeautifulSoup4`, `pdfminer.six` |
+| **AI Image Analysis**        | OpenCV, TensorFlow, PyTorch                 |
+| **API Integrations**         | Google Custom Search API, Telegram API      |
+| **Bot Framework**            | Python Telegram Bot API                      |
+| **Deployment**               | Docker, Flask (for API handling)             |
+
 
 - **Programming Language:** Python 3.x
 - **Libraries & Tools:**
