@@ -3,10 +3,10 @@
 VerifAI is an AI-driven Telegram bot desgined to combat misinfomration in private messaging apps such as Telegram. Developed for TechFest 2025, VerifAI utilizes Natural Language Processing and AI-Powered image analysis to detect falsehoods
 
 ---
-## The Problem: Why VerifAi
+## **The Problem**: Why VerifAI
 65% of adults in Singapore struggle to differentiate between real and fake online content. With false information spreading effortlessly through a single forward button, online falsehoods proliferate at an alarming rate. Meanwhile, existing fact-checking tools remain slow, unreliable, and require tedious manual verification. 
 
-## The VerifAI solution 
+## **Solution**: VerifAI 
 VerifAI mitigates misinfomration by providing instant, automated fact-checking directly through a Telegram bot. VerifAI aims to combat misinformation by combining text analysis techniques with AI-driven image detection. The two models work independently to assess the credibility of claims and likelihood of AI generated images respectively.
 
 - **Model 1: Claim Verification**  
@@ -29,6 +29,16 @@ VerifAI mitigates misinfomration by providing instant, automated fact-checking d
 
 ## Tech Stack 
 ![Python](https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/-Scikit%20Learn-F7931E?logo=scikit-learn&logoColor=white)
+![spaCy](https://img.shields.io/badge/-spaCy-09A3D5?logo=spacy&logoColor=white)
+![BeautifulSoup](https://img.shields.io/badge/-BeautifulSoup-009688?logo=beautifulsoup&logoColor=white)
+![PDFMiner](https://img.shields.io/badge/-PDFMiner-8A2BE2?logo=pdfminer&logoColor=white)
+![OpenCV](https://img.shields.io/badge/-OpenCV-5C3EE8?logo=opencv&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/-TensorFlow-FF6F00?logo=tensorflow&logoColor=white)
+![PyTorch](https://img.shields.io/badge/-PyTorch-EE4C2C?logo=pytorch&logoColor=white)
+![Google Custom Search API](https://img.shields.io/badge/-Google%20Search%20API-4285F4?logo=google&logoColor=white)
+![Telegram API](https://img.shields.io/badge/-Telegram%20API-26A5E4?logo=telegram&logoColor=white)
+![Flask](https://img.shields.io/badge/-Flask-000000?logo=flask&logoColor=white)
 | **Category**                 | **Technology Used**                           |
 |------------------------------|----------------------------------------------|
 | **Programming Language**     | Python 3.x                                   |
@@ -38,18 +48,6 @@ VerifAI mitigates misinfomration by providing instant, automated fact-checking d
 | **API Integrations**         | Google Custom Search API, Telegram API      |
 | **Bot Framework**            | Python Telegram Bot API                      |
 | **Deployment**               | Flask             |
-
-
-- **Programming Language:** Python 3.x
-- **Libraries & Tools:**
-  - `scikit-learn` (for TF-IDF and vector operations)
-  - `requests` (for HTTP requests)
-  - `BeautifulSoup4` (for HTML/XML scraping)
-  - PDF parsing libraries (e.g., `pdfminer.six` or similar)
-  - Pre-trained models or APIs for AI image detection (as applicable)
-  - Google Custom Search API client (ensure you have valid API credentials)
-- **Other:** Internet connectivity for API requests and content scraping
-
 ---
 
 ## Installation
