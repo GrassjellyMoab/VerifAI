@@ -1,4 +1,6 @@
+import requests
 import os
+import argparse
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 load_dotenv()
@@ -17,10 +19,8 @@ headers = {
 def is_url(string):
     """
     Check if a string is a valid URL.
-
     Args:
         string (str): The string to check.
-
     Returns:
         bool: True if string is a URL, False otherwise.
     """
@@ -54,42 +54,109 @@ def auto_detect_and_check(input_str):
     # Determine file type based on the extension.
     file_extension = os.path.splitext(input_str)[1].lower()
     # Define supported audio and image extensions.
-    audio_extensions = ['.mp3', '.wav', '.m4a', '.ogg', '.flac']
     image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.apng']
 
-    if file_extension in audio_extensions:
-        return check_voice_file(input_str)
-    elif file_extension in image_extensions:
+    if file_extension in image_extensions:
         return check_image_file(input_str)
     else:
         print(f"Error: Unsupported file type '{file_extension}'.")
         print("Supported image types: " + ", ".join(image_extensions))
-        print("Supported audio types: " + ", ".join(audio_extensions))
         return None
 
 
 # Dummy implementations of the API functions for context.
 # Replace these with your actual implementations.
 def check_image_url(image_url):
-    print(f"Checking image URL: {image_url}")
-    # Call your API here...
-    return {"report": {"verdict": "real", "ai": {"confidence": 0.2}, "human": {"confidence": 0.8}}, "id": "123",
-            "created_at": "2025-03-09T00:00:00Z"}
+    """
+    Check if an image from a URL is AI-generated
+
+    Args:
+        image_url (str): URL of the image to analyze
+
+    Returns:
+        dict: API response with analysis results
+    """
+    endpoint = f"{BASE_URL}/reports/image"
+
+    # JSON payload for URL-based check
+    payload = {
+        "object": image_url
+    }
+
+    # Set content type for JSON
+    json_headers = headers.copy()
+    json_headers["Content-Type"] = "application/json"
+
+    print(f"Analyzing image from URL: {image_url}")
+
+    # Make the API call
+    response = requests.post(endpoint, headers=json_headers, json=payload)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error: {response.status_code}")
+        print(response.text)
+        return None
 
 
 def check_image_file(file_path):
-    print(f"Checking image file: {file_path}")
-    # Call your API here...
-    return {"report": {"verdict": "fake", "ai": {"confidence": 0.7}, "human": {"confidence": 0.3}}, "id": "456",
-            "created_at": "2025-03-09T00:00:00Z"}
+    """
+    Check if an image file is AI-generated
 
+    Args:
+        file_path (str): Path to the local image file
 
-def check_voice_file(file_path):
-    print(f"Checking voice file: {file_path}")
-    # Call your API here...
-    return {"report": {"verdict": "real", "confidence": 0.9, "duration": 12}, "id": "789",
-            "created_at": "2025-03-09T00:00:00Z"}
+    Returns:
+        dict: API response with analysis results
+    """
+    endpoint = f"{BASE_URL}/reports/image"
 
+    # Set content type for multipart/form-data
+    form_headers = headers.copy()
+
+    # Get file extension to determine mime type
+    file_extension = os.path.splitext(file_path)[1].lower()
+
+    # Map common image extensions to MIME types
+    mime_types = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp',
+        '.svg': 'image/svg+xml',
+        '.apng': 'image/apng'
+    }
+
+    mime_type = mime_types.get(file_extension, 'image/jpeg')
+
+    print(f"Analyzing image file: {file_path}")
+
+    # Prepare the file
+    try:
+        with open(file_path, 'rb') as image_file:
+            files = {
+                'object': (os.path.basename(file_path), image_file, mime_type)
+            }
+
+            # Make the API call
+            response = requests.post(endpoint, headers=form_headers, files=files)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Error: {response.status_code}")
+            print(response.text)
+            return None
+    except FileNotFoundError:
+        print(f"Error: File not found - {file_path}")
+        return None
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return None
 
 # Example usage:
 if __name__ == "__main__":
