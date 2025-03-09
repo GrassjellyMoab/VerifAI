@@ -76,6 +76,11 @@ def compute_credibility_score():
         medium_sim = sorted([sim1, sim2,sim3])[1]
         mean_sim = (sim2+sim3)/2
 
+        if mean_sim < 0.4:
+            mean_sim = mean_sim - 0.10
+        elif mean_sim < 0.6:
+            mean_sim = mean_sim - 0.15
+
         similarities.append((mean_sim, url))
 
     if not similarities:
