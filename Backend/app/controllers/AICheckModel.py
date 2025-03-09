@@ -23,6 +23,7 @@ def aiChecker_model(message, user_text, bot):
 
         # Include AI vs. Human confidence scores if available
         if "ai" in result["report"] and "confidence" in result["report"]["ai"]:
+            print(f"result of ai vs human: {result}")
             ai_confidence = result["report"]["ai"]["confidence"]
             human_confidence = result["report"]["human"]["confidence"]
             output += f"AI Likelihood: {ai_confidence:.2%}\n"

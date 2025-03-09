@@ -3,6 +3,7 @@ import os
 import pytesseract as te
 from PIL import Image
 import telebot
+from telebot import types
 from dotenv import load_dotenv
 
 from Backend.app.controllers.model import reliability_model
@@ -22,6 +23,7 @@ keyword_query_percentage = 0.4
 max_sites_in_query = 4
 is_singapore_sources = True
 from tensorflow.keras.models import load_model
+
 model = load_model('MobileNetV2_finetuned_model(0.95 loss 0.11).keras')
 
 # This dictionary will store each user's current "mode"
@@ -50,7 +52,7 @@ def call_model(message, user_text, isReliability=True):
             try:
                 processing_msg = bot.send_message(message.chat.id, "Generating heatmap visualization... Please wait.")
 
-                heatmap_path = heatmap_creator(user_text,model) #heatmap generation
+                heatmap_path = heatmap_creator(user_text, model)  # heatmap generation
 
                 with open(heatmap_path, 'rb') as heatmap_img:
                     bot.send_photo(message.chat.id, heatmap_img,
@@ -66,36 +68,6 @@ def send_usage(message, command, usage):
     bot.reply_to(message, f"Usage: /{command} {usage}")
 
 
-@bot.message_handler(commands=['set_redundancy_threshold'])
-def set_redundancy_threshold(message):
-    global redundancy_threshold
-    parts = message.text.split()
-    if len(parts) != 2:
-        send_usage(message, "set_redundancy_threshold", "<integer>")
-        return
-    try:
-        value = int(parts[1])
-        redundancy_threshold = value
-        bot.reply_to(message, f"redundancy_threshold set to {value}.")
-    except ValueError:
-        bot.reply_to(message, "Please provide a valid integer.")
-
-
-@bot.message_handler(commands=['set_max_search_count'])
-def set_max_search_count_cmd(message):
-    global max_search_count
-    parts = message.text.split()
-    if len(parts) != 2:
-        send_usage(message, "set_max_search_count", "<integer>")
-        return
-    try:
-        value = int(parts[1])
-        max_search_count = value
-        bot.reply_to(message, f"max_search_count set to {value}.")
-    except ValueError:
-        bot.reply_to(message, "Please provide a valid integer.")
-
-
 @bot.message_handler(commands=['set_min_source_count'])
 def set_min_source_count_cmd(message):
     global min_source_count
@@ -107,39 +79,6 @@ def set_min_source_count_cmd(message):
         value = int(parts[1])
         min_source_count = value
         bot.reply_to(message, f"min_source_count set to {value}.")
-    except ValueError:
-        bot.reply_to(message, "Please provide a valid integer.")
-
-
-@bot.message_handler(commands=['set_keyword_query_percentage'])
-def set_keyword_query_percentage_cmd(message):
-    global keyword_query_percentage
-    parts = message.text.split()
-    if len(parts) != 2:
-        send_usage(message, "set_keyword_query_percentage", "<float between 0 and 1>")
-        return
-    try:
-        value = float(parts[1])
-        if not 0 <= value <= 1:
-            bot.reply_to(message, "Value must be between 0 and 1.")
-            return
-        keyword_query_percentage = value
-        bot.reply_to(message, f"keyword_query_percentage set to {value}.")
-    except ValueError:
-        bot.reply_to(message, "Please provide a valid float between 0 and 1.")
-
-
-@bot.message_handler(commands=['set_max_sites_in_query'])
-def set_max_sites_in_query_cmd(message):
-    global max_sites_in_query
-    parts = message.text.split()
-    if len(parts) != 2:
-        send_usage(message, "set_max_sites_in_query", "<integer>")
-        return
-    try:
-        value = int(parts[1])
-        max_sites_in_query = value
-        bot.reply_to(message, f"max_sites_in_query set to {value}.")
     except ValueError:
         bot.reply_to(message, "Please provide a valid integer.")
 
@@ -165,12 +104,8 @@ def set_is_singapore_sources_cmd(message):
 @bot.message_handler(commands=['view_parameters'])
 def view_parameters_cmd(message):
     reply = (
-        f"redundancy_threshold     : {redundancy_threshold}\n"
-        f"max_search_count         : {max_search_count}\n"
-        f"min_source_count         : {min_source_count}\n"
-        f"max_sites_in_query       : {max_sites_in_query}\n"
-        f"keyword_query_percentage : {keyword_query_percentage}\n"
-        f"is_singapore_sources     : {is_singapore_sources}\n"
+        f"Minimum Source Count before Evaluation : {min_source_count}\n"
+        f"Singapore Sources Enabled? : {is_singapore_sources}\n"
     )
     bot.reply_to(message, reply)
 
@@ -178,11 +113,7 @@ def view_parameters_cmd(message):
 @bot.message_handler(commands=['reset_parameters'])
 def reset_parameters_cmd(message):
     global redundancy_threshold, max_search_count, min_source_count, max_sites_in_query, keyword_query_percentage, is_singapore_sources
-    redundancy_threshold = 10
-    max_search_count = 35
     min_source_count = 40
-    keyword_query_percentage = 0.4
-    max_sites_in_query = 4
     is_singapore_sources = True
     bot.reply_to(message, "Resetting parameters to defaults...")
     view_parameters_cmd(message)
@@ -215,50 +146,183 @@ def send_welcome(message):
     # Initialize user mode to None
     user_mode[message.chat.id] = None
 
+
 @bot.message_handler(commands=['help'])
 def send_commands(message):
     """
-    Sends help information with available commands and their usage
+    Sends help information with available commands as interactive buttons
     """
-    help_text = (
-        "<b>Parameter Settings</b>\n\n"
+    # Create keyboard markup
+    markup = types.InlineKeyboardMarkup(row_width=1)
 
-        "🔧 <b>Basic Parameters:</b>\n"
-        "• /set_redundancy_threshold &lt;integer&gt; \n"
-        "  Usage: To adjust how many redundant checks to perform\n"
-        "  Example: <code>/set_redundancy_threshold 15</code>\n\n"
-
-        "• /set_max_search_count &lt;integer&gt;\n "
-        "  Usage: To set the maximum number of search results\n"
-        "  Example: <code>/set_max_search_count 40</code>\n\n"
-
-        "• /set_min_source_count &lt;integer&gt;\n "
-        "  Usage: To set the minimum sources to consider\n"
-        "  Example: <code>/set_min_source_count 30</code>\n\n"
-
-        "🔍 <b>Search Parameters:</b>\n"
-        "• /set_keyword_query_percentage &lt;float&gt; "
-        "  Usage: Insert a float from 0-1\n"
-        "  Example: <code>/set_keyword_query_percentage 0.5</code>\n\n"
-
-        "• /set_max_sites_in_query &lt;integer&gt;\n "
-        "  Usage: Set the max websites per query\n"
-        "  Example: <code>/set_max_sites_in_query 5</code>\n\n"
-
-        "• /set_is_singapore_sources &lt;true/false&gt;\n "
-        "  Usage: To set whether or not to only use Singapore sources\n"
-        "  Example: <code>/set_is_singapore_sources true</code>\n\n"
-
-        "⚙️ <b>Management Commands:</b>\n"
-        "• /view_parameters - View current settings\n"
-        "• /reset_parameters - Reset to defaults\n\n"
-
-        "Type /start to return to main menu"
+    # Create prompt buttons that will ask for parameter values when clicked
+    btn_min_source = types.InlineKeyboardButton(
+        text="Set Minimum Sources Count 🎲",
+        callback_data="prompt_min_source"
     )
 
-    bot.send_message(message.chat.id, help_text, parse_mode="HTML")
+    btn_singapore_sources = types.InlineKeyboardButton(
+        text="Disable/Enable Singapore Sources 🇸🇬",
+        callback_data="toggle_singapore_sources"
+    )
+
+    # Direct execution buttons
+    btn_view_params = types.InlineKeyboardButton(
+        text="View Current Parameters",
+        callback_data="exec_view_parameters"
+    )
+
+    btn_reset_params = types.InlineKeyboardButton(
+        text="Reset Parameters to Default",
+        callback_data="exec_reset_parameters"
+    )
+
+    # Add buttons to markup in sections
+    markup.add(btn_min_source, btn_singapore_sources, btn_view_params, btn_reset_params)
+
+    # Send message with the inline keyboard
+    bot.send_message(
+        message.chat.id,
+        "<b>Help Menu - Select a Command:</b>\nClick a button to execute or configure a parameter:",
+        reply_markup=markup,
+        parse_mode="HTML"
+    )
+
     # Initialize user mode to None
     user_mode[message.chat.id] = None
+
+
+# Add this callback handler to process button clicks
+@bot.callback_query_handler(func=lambda call: True)
+def callback_handle_command(call):
+    """
+    Handle callback from help menu buttons - directly execute commands or prompt for input
+    """
+    global redundancy_threshold, max_search_count, min_source_count, max_sites_in_query, keyword_query_percentage, is_singapore_sources
+
+    chat_id = call.message.chat.id
+    message_id = call.message.message_id
+
+    # Handle direct execution commands
+    if call.data == "exec_view_parameters":
+        # Execute view parameters directly
+        reply = (
+            f"min_source_count         : {min_source_count}\n"
+            f"is_singapore_sources     : {is_singapore_sources}\n"
+        )
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=f"<b>Current Parameters:</b>\n\n{reply}",
+            parse_mode="HTML"
+        )
+
+    elif call.data == "exec_reset_parameters":
+        # Execute reset parameters directly
+        min_source_count = 40
+        is_singapore_sources = True
+
+        reply = (
+            f"min_source_count         : {min_source_count}\n"
+            f"is_singapore_sources     : {is_singapore_sources}\n"
+        )
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=f"<b>Parameters Reset to Defaults:</b>\n\n{reply}",
+            parse_mode="HTML"
+        )
+
+    # Handle toggle for Singapore sources
+    elif call.data == "toggle_singapore_sources":
+        is_singapore_sources = not is_singapore_sources
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=f"<b>Singapore Sources:</b> {'Enabled ✅' if is_singapore_sources else 'Disabled ❌'}\n\nPreference has been updated.",
+            parse_mode="HTML"
+        )
+
+    # Handle parameter input prompts
+    elif call.data == "prompt_min_source":
+        # Create input prompt with number buttons
+        markup = types.InlineKeyboardMarkup(row_width=5)
+        number_buttons = []
+
+        # Create number buttons (10, 20, 30, 40, 50)
+        for num in [10, 20, 30, 40, 50]:
+            number_buttons.append(types.InlineKeyboardButton(
+                text=str(num),
+                callback_data=f"set_min_source_{num}"
+            ))
+
+        # Add custom input option
+        custom_btn = types.InlineKeyboardButton(
+            text="Custom Value...",
+            callback_data="custom_min_source"
+        )
+
+        # Add back button
+        back_btn = types.InlineKeyboardButton(
+            text="« Back to Help Menu",
+            callback_data="back_to_help"
+        )
+
+        markup.add(*number_buttons)
+        markup.add(custom_btn)
+        markup.add(back_btn)
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="<b>Select Minimum Source Count:</b>\n\nChoose how many sources to consider before evaluation:",
+            reply_markup=markup,
+            parse_mode="HTML"
+        )
+
+    # Handle setting min source count from buttons
+    elif call.data.startswith("set_min_source_"):
+        value = int(call.data.split("_")[-1])
+        min_source_count = value
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=f"<b>Minimum Source Count</b> set to: <b>{value}</b>\n\nParameter has been updated successfully.",
+            parse_mode="HTML"
+        )
+
+    # Handle custom min source count input
+    elif call.data == "custom_min_source":
+        msg = bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="Please enter a minimum source count (integer value).\n\nReply directly to this message with a number.",
+            parse_mode="HTML"
+        )
+
+        # Register a next step handler to capture the reply
+        bot.register_next_step_handler(msg, process_min_source_input)
+
+    # Handle back to help menu
+    elif call.data == "back_to_help":
+        send_commands(call.message)
+
+    # Answer callback to remove the loading indicator
+    bot.answer_callback_query(call.id)
+
+
+def process_min_source_input(message):
+    """Process custom input for minimum source count"""
+    global min_source_count
+    try:
+        value = int(message.text.strip())
+        min_source_count = value
+        bot.reply_to(message, f"Minimum source count set to {value}.")
+    except ValueError:
+        bot.reply_to(message, "Please provide a valid integer. Operation cancelled.")
 
 
 @bot.message_handler(content_types=['text'])
@@ -292,7 +356,7 @@ def handle_text(message):
     # If user_mode is ai, we can pass the text to AI checker if it was a link
     elif user_mode.get(chat_id) == "ai":
         # If the user typed a URL to an image, you can handle it here
-        # If it’s just text, you might want to inform them to send an image.
+        # If it's just text, you might want to inform them to send an image.
         bot.reply_to(message, "Please send an image as a file or photo for AI detection, or a direct image URL.")
     else:
         # No mode selected
