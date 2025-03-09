@@ -35,7 +35,6 @@ VerifAI combats misinformation by providing instant, automated fact-checking dir
 ![BeautifulSoup](https://img.shields.io/badge/-BeautifulSoup-009688?logo=beautifulsoup&logoColor=white)
 ![OpenCV](https://img.shields.io/badge/-OpenCV-5C3EE8?logo=opencv&logoColor=white)
 ![TensorFlow](https://img.shields.io/badge/-TensorFlow-FF6F00?logo=tensorflow&logoColor=white)
-![PyTorch](https://img.shields.io/badge/-PyTorch-EE4C2C?logo=pytorch&logoColor=white)
 ![Pytesseract](https://img.shields.io/badge/-Pytesseract-7F7F7F?logo=tesseract&logoColor=white)
 ![Google Custom Search API](https://img.shields.io/badge/-Google%20Search%20API-4285F4?logo=google&logoColor=white)
 ![Telegram API](https://img.shields.io/badge/-Telegram%20API-26A5E4?logo=telegram&logoColor=white)
@@ -45,7 +44,7 @@ VerifAI combats misinformation by providing instant, automated fact-checking dir
 | **Programming Language**     | Python 3.10                                   |
 | **Natural Language Processing** | `scikit-learn`, `TF-IDF`    |
 | **Web Scraping & Data Extraction** | `BeautifulSoup4` |
-| **Image Analysis**        | OpenCV, TensorFlow, PyTorch, Pytesseract              |
+| **Image Analysis**        | OpenCV, TensorFlow, Pytesseract              |
 | **API Integrations**         | Google Custom Search API, Telegram API      |
 | **Bot Framework**            | Python Telegram Bot API                      |
 | **Deployment**               | Flask             |
