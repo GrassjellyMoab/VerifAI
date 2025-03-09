@@ -9,6 +9,7 @@ embedding_blueprint = Blueprint("embedding_blueprint", __name__)
 
 model1 = SentenceTransformer("all-MiniLM-L6-v2")
 model2 = SentenceTransformer("all-mpnet-base-v2")
+model3 = SentenceTransformer("paraphrase-MiniLM-L6-v2")
 
 def embed_text(text,model):
     """
@@ -45,7 +46,7 @@ def compute_credibility_score():
 
     claim_vec1 = embed_text(input_text,model1)
     claim_vec2 = embed_text(input_text,model2)
-
+    claim_vec3 = embed_text(input_text, model3)
     total_score = 0
     highest_score = -1
     min_score = 1
@@ -67,12 +68,15 @@ def compute_credibility_score():
 
         article_vec1 = embed_text(article_content,model1)
         article_vec2 = embed_text(article_content,model2)
+        article_vec3 = embed_text(article_content,model3)
         sim1 = compute_similarity(claim_vec1, article_vec1)
         sim2 = compute_similarity(claim_vec2, article_vec2)
-        if sim1 > sim2:
-            similarities.append((sim1, url))
-        else:
-            similarities.append((sim2, url))
+        sim3 = compute_similarity(claim_vec3, article_vec3)
+
+        medium_sim = sorted([sim1, sim2,sim3])[1]
+
+
+        similarities.append((medium_sim, url))
 
     if not similarities:
         return jsonify({

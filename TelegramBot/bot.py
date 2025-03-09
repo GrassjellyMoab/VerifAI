@@ -434,5 +434,7 @@ def handle_photo(message):
 
 
 def start_bot():
+    import time
+    time.sleep(7)
     print("Bot is polling...")
     bot.polling()
