@@ -49,13 +49,8 @@ def reliability_model(message, user_text, bot,
         if response.status_code == 200:
             data = response.json()
             keywords = data.get("keywords", " ")
-            reply_msg = f"Extracting Key Words:\n\nKeywords: {keywords}"
-        else:
-            reply_msg = "Error verifying. Server responded with an error."
     except Exception as e:
-        reply_msg = f"Error: {e}"
-
-    bot.send_message(message.chat.id, reply_msg)
+        bot.send_message(message.chat.id,f"Error: {e}")
 
     """
     scraper 
@@ -83,13 +78,16 @@ def reliability_model(message, user_text, bot,
             results = data.get("results", "N/A")
             print(f"here:: {results}")
             return_data = ""
+            count = 0
             for result in results:
+                if count == 5: break
                 if len(return_data) < 3000:
                     title = result.get("title", "")
                     url = result.get("url", "")
                     if url.endswith(".xml"):
                         continue
                     return_data += f"{title}\nlink: {url}\n\n\n"
+                count += 1
 
         else:
             return_data = "Error verifying. Server responded with an error."
