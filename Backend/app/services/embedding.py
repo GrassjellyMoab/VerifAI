@@ -6,13 +6,15 @@ from flask import Blueprint, request, jsonify
 
 embedding_blueprint = Blueprint("embedding_blueprint", __name__)
 
-# 1) Load the embedding model (only once at startup)
-model = SentenceTransformer("all-MiniLM-L6-v2")
 
-def embed_text(text):
+model1 = SentenceTransformer("all-MiniLM-L6-v2")
+model2 = SentenceTransformer("all-mpnet-base-v2")
+
+def embed_text(text,model):
     """
     Converts raw text into a dense vector embedding using a SentenceTransformer model.
     """
+
     return model.encode(text, convert_to_numpy=True)
 
 def compute_similarity(text_vec, article_vec):
@@ -41,7 +43,9 @@ def compute_credibility_score():
     _ = data.get("article_info")  # list of {title : title, url:url, reliability: r}
     input_text = data.get("input_text")
 
-    input_vec = embed_text(input_text)
+    claim_vec1 = embed_text(input_text,model1)
+    claim_vec2 = embed_text(input_text,model2)
+
     total_score = 0
     highest_score = -1
     min_score = 1
@@ -61,9 +65,14 @@ def compute_credibility_score():
         if not article_content:
             continue
 
-        article_vec = embed_text(article_content)
-        sim = compute_similarity(input_vec, article_vec)
-        similarities.append((sim, url))
+        article_vec1 = embed_text(article_content,model1)
+        article_vec2 = embed_text(article_content,model2)
+        sim1 = compute_similarity(claim_vec1, article_vec1)
+        sim2 = compute_similarity(claim_vec2, article_vec2)
+        if sim1 > sim2:
+            similarities.append((sim1, url))
+        else:
+            similarities.append((sim2, url))
 
     if not similarities:
         return jsonify({
