@@ -5,7 +5,6 @@ import pytesseract as te
 from PIL import Image
 import telebot
 from dotenv import load_dotenv
-from app.services.explanation import generate_reasoning_summary
 
 load_dotenv()
 
@@ -15,6 +14,7 @@ verify_url = "http://localhost:5050/verify"
 scrape_url = "http://localhost:5050/scrape"
 scrape_content_url = "http://localhost:5050/scrape_content"
 embedding_url = "http://localhost:5050/embedding"
+explanation_url = "http://localhost:5050/explanation"
 
 def reliability_check(min_score, max_score, min_article, max_article):
     if min_score < -0.5:
@@ -150,11 +150,11 @@ def reliability_model(message, user_text, bot,
         bot.send_message(message.chat.id, f"Error during embedding analysis: {e}")
         return
 
-    # --- STEP 5: GPT-based Reasoning Summary ---
+    # --- STEP 5: GPT-based Reasoning Summary using the explanation blueprint ---
     try:
         bot.send_message(message.chat.id, "Summarising Reasoning...")
 
-        # Filter out articles with empty or placeholder content
+        # Filter out articles with empty or placeholder content.
         valid_articles = [
             article for article in article_data
             if article.get("article_content", "").strip() and
@@ -171,14 +171,29 @@ def reliability_model(message, user_text, bot,
                 if content:
                     supporting_texts.append(f"Source ({article_url}):\n{content}\n")
 
-        # If no valid supporting articles are found, use a fallback (e.g., use titles or a default message).
+        # If no valid supporting articles are found, use a fallback message.
         if not supporting_texts:
             supporting_texts = ["No sufficient supporting article content could be extracted."]
 
-        # Generate GPT reasoning summary
-        reasoning_summary = generate_reasoning_summary(user_text, supporting_texts, max_score, min_score)
-        bot.send_message(message.chat.id, f"Reasoning Summary:\n\n{reasoning_summary}")
+        # Prepare payload for the explanation endpoint.
+        payload5 = {
+            "user_text": user_text,
+            "supporting_texts": supporting_texts,
+            "max_score": max_score,
+            "min_score": min_score,
+            "temperature": 0.7
+        }
 
+        # Call the explanation blueprint route.
+        exp_response = requests.post(explanation_url, json=payload5)
+        if exp_response.status_code == 200:
+            exp_data = exp_response.json()
+            reasoning_summary = exp_data.get("reasoning_summary", "No reasoning summary returned.")
+        else:
+            reasoning_summary = f"Error generating reasoning summary: {exp_response.text}"
+
+        bot.send_message(message.chat.id, f"Reasoning Summary:\n\n{reasoning_summary}")
     except Exception as e:
         bot.send_message(message.chat.id, f"Error generating reasoning summary: {e}")
+
 

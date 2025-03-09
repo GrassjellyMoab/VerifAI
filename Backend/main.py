@@ -5,6 +5,7 @@ from app.services.scraper import scrape_blueprint
 
 from app.services.content_scraper import scrape_content_blueprint
 from app.services.embedding import embedding_blueprint
+from app.services.explanation import explanation_blueprint
 from heatmap_model import heatmap_creator
 
 
@@ -17,8 +18,8 @@ def create_app():
     app.register_blueprint(scrape_content_blueprint, url_prefix="/scrape_content")
     # (Optional) configure app settings, load env, etc.
     app.register_blueprint(embedding_blueprint, url_prefix="/embedding")
+    app.register_blueprint(explanation_blueprint, url_prefix="/explanation")
     return app
-
 
 if __name__ == "__main__":
 
