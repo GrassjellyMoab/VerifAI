@@ -21,7 +21,6 @@ def create_app():
     app.register_blueprint(explanation_blueprint, url_prefix="/explanation")
     return app
 
-
 if __name__ == "__main__":
 
     from TelegramBot.bot import start_bot
