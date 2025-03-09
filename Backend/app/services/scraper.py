@@ -119,7 +119,7 @@ def google_custom_search(query, num_results=5):
     GOOGLE_CSE_ID = "50fd98dbe1984411d"  # Replace with your Custom Search Engine ID
     search_url = "https://www.googleapis.com/customsearch/v1"
     final_query = f"{query} (site:.com OR site:.org OR site:.sg)"
-
+    print(f"query: {final_query}")
     params = {
         "key": GOOGLE_API_KEY,
         "cx": GOOGLE_CSE_ID,
@@ -166,6 +166,7 @@ def verify_keywords_with_sources():
     keyword_query_percentage = data.get("keyword_query_percentage", 0.8)
     max_sites_in_query = data.get("max_sites_in_query", 5)
     is_singapore_sources = data.get("is_singapore_sources", False)
+    pdf_count = 0
 
     if keyword_query_percentage > 1 or keyword_query_percentage < 0.2:
         keyword_query_percentage = 0.5
@@ -223,6 +224,11 @@ def verify_keywords_with_sources():
 
                 if url in seen_urls:
                     continue
+
+                if url.endswith(".pdf"):
+                    pdf_count+=1
+                    continue
+
 
                 seen_urls.add(url)
                 if match:
