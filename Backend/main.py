@@ -10,7 +10,7 @@ from heatmap_model import heatmap_creator
 
 def create_app():
     app = Flask(__name__)
-
+    #test
     # Register your blueprint for the /verify endpoint
     app.register_blueprint(verify_blueprint, url_prefix="/verify")
     app.register_blueprint(scrape_blueprint, url_prefix="/scrape")
