@@ -1,6 +1,18 @@
 import os
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+load_dotenv()
 
+API_KEY = os.getenv("AIorNOT_KEY")
+
+# Base URL for the API
+BASE_URL = "https://api.aiornot.com/v1"
+
+# Headers for authentication
+headers = {
+    "Authorization": f"Bearer {API_KEY}",
+    "Accept": "application/json"
+}
 
 def is_url(string):
     """
