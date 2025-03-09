@@ -105,8 +105,6 @@ def tf_idf_keywords(user_text,redundancy_threshold=15):
 
 verify_blueprint = Blueprint("verify_blueprint", __name__)
 
-
-
 @verify_blueprint.route("/", methods=["POST"])
 def verify_claim():
     data = request.get_json()
@@ -114,13 +112,6 @@ def verify_claim():
     redundancy_threshold = data.get("redundancy_threshold", 15)
     # find term keywords using TF - IDF then do the search
     keywords = tf_idf_keywords(user_text,redundancy_threshold)
-
-    # Then do your search:
-    # search_results = perform_web_search(user_text)
-    # print(search_results)
-
-
-
     return jsonify({
         "keywords": keywords  # Convert set to list for JSON response
     })

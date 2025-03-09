@@ -176,9 +176,7 @@ def verify_keywords_with_sources():
         return jsonify({"error": "No keywords provided"}), 400
 
     # Combine keywords into a base search query
-
     # Generate a credible filter from a subset of credible domains
-
     # Append the filter to the query so only results from those domains are returned
 
 

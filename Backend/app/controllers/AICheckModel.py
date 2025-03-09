@@ -1,7 +1,7 @@
 from app.services.autoDetectCheck import auto_detect_and_check
 
 def aiChecker_model(message, user_text, bot):
-    # First, attempt to analyze the input with the auto_detect_and_check function
+    # Analyse the input with the auto_detect_and_check function
     result = auto_detect_and_check(user_text)
 
     if not result:
@@ -9,26 +9,22 @@ def aiChecker_model(message, user_text, bot):
         return
 
     # Determine the type of input based on the API response.
-    # We assume that if the "report" has a "confidence" field directly, it might be a voice file.
     input_type = 'image'
     if "report" in result and "confidence" in result["report"]:
         input_type = 'voice'
 
-    # Begin building the output message
     output = "===== AIorNOT ANALYSIS RESULTS =====\n"
 
     if input_type == 'image':
         verdict = result["report"].get("verdict", "N/A")
         output += f"Verdict: {verdict.upper()}\n"
 
-        # Include AI vs. Human confidence scores if available
         if "ai" in result["report"] and "confidence" in result["report"]["ai"]:
             print(f"result of ai vs human: {result}")
             ai_confidence = result["report"]["ai"]["confidence"]
             human_confidence = result["report"]["human"]["confidence"]
             output += f"AI Likelihood: {ai_confidence:.2%}\n"
 
-            # If there is a generator breakdown, include that information.
             if "generator" in result["report"]:
                 output += "\nAI Generator Analysis:\n"
                 for generator, details in result["report"]["generator"].items():
