@@ -5,6 +5,7 @@ from PIL import Image
 import telebot
 from telebot import types
 from dotenv import load_dotenv
+import time
 
 from Backend.app.controllers.model import reliability_model
 from Backend.app.controllers.AICheckModel import aiChecker_model
@@ -120,36 +121,38 @@ def reset_parameters_cmd(message):
     view_parameters_cmd(message)
 
 
+# Dictionary to store last start timestamp for each user
+last_start_time = {}
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    """
-    Sends a welcome message and presents a custom keyboard with 3 buttons:
-      - Check Text Reliability
-      - Detect AI Image
-      - End Conversation
-    """
+    global last_start_time
+    chat_id = message.chat.id
+    now = time.time()
+
+    # If we've sent /start in the last 3 seconds, ignore this one.
+    if chat_id in last_start_time and (now - last_start_time[chat_id] < 2):
+        return
+
+    last_start_time[chat_id] = now
+
     welcome_text = (
         "Hello, I'm VerifAI!\n\n"
         "I can verify reliability of claims or check if an image is AI-generated. 🕵️ \n\n"
         "Choose one of the options below or set my parameters of the bot with the /help command!\n\n"
-        "Type /start to see this message again! 😁"
+        "*Tip: For Checking Text Reliability, when checking information not related to Singapore, results will be more accurate if you disable Singapore sources through the help menu.*\n\n"
+        "Welcome to VerifAI!"
     )
 
-    # Create a custom reply keyboard
+    # Create a custom inline keyboard
     markup = types.InlineKeyboardMarkup(row_width=1)
     reliability_btn = types.InlineKeyboardButton("Check Text Reliability 💡", callback_data="reliability_mode")
     ai_btn = types.InlineKeyboardButton("Detect AI Image 🤖", callback_data="ai_mode")
     end_btn = types.InlineKeyboardButton("End Conversation", callback_data="end_convo")
     markup.add(reliability_btn, ai_btn, end_btn)
 
-    bot.send_message(
-        message.chat.id,
-        welcome_text,
-        reply_markup=markup,
-        parse_mode="HTML"
-    )
-    # Initialize user mode to None
-    user_mode[message.chat.id] = None
+    bot.send_message(chat_id, welcome_text, reply_markup=markup, parse_mode="Markdown")
+    user_mode[chat_id] = None
 
 
 def send_again(message):
