@@ -69,12 +69,11 @@ def compute_credibility_score():
         article_vec1 = embed_text(article_content,model1)
         article_vec2 = embed_text(article_content,model2)
         article_vec3 = embed_text(article_content,model3)
-        sim1 = compute_similarity(claim_vec1, article_vec1)
+        # sim1 = compute_similarity(claim_vec1, article_vec1)
         sim2 = compute_similarity(claim_vec2, article_vec2)
         sim3 = compute_similarity(claim_vec3, article_vec3)
 
-        medium_sim = sorted([sim1, sim2,sim3])[1]
-
+        medium_sim = min(sim2,sim3)
 
         similarities.append((medium_sim, url))
 
