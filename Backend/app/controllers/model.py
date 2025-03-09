@@ -36,7 +36,7 @@ def reliability_model(message, user_text, bot,
                       is_singapore_sources=True  # scraper parameters
                       ):
 
-    global keywords, reply_data, results, score, return_data
+    global keywords, reply_data, results, min_score, max_score, return_data, article_data
 
     payload = {"text": user_text,
                "redundancy_threshold": redundancy_threshold
@@ -63,6 +63,7 @@ def reliability_model(message, user_text, bot,
 
     bot.send_message(message.chat.id, "Finding Sources...")
     payload2 = {"keywords": keywords,
+                "original_query": user_text,
                 "max_search_count": max_search_count,
                 "min_source_count": min_source_count,
                 "keyword_query_percentage": keyword_query_percentage,
@@ -91,6 +92,7 @@ def reliability_model(message, user_text, bot,
             return_data = "Error verifying. Server responded with an error."
     except Exception as e:
         reply_data = f"Error: {e}"
+
     if return_data == "":
         bot.send_message(message.chat.id, "No relevant credible Sources could be found. This is likely a fake news.")
         return None
@@ -107,7 +109,7 @@ def reliability_model(message, user_text, bot,
         if response.status_code == 200:
             data = response.json()
             results = data.get("results", "N/A")
-
+            article_data = results
         else:
             reply_msg = "Error scraping. Server responded with an error."
     except Exception as e:
@@ -148,10 +150,20 @@ def reliability_model(message, user_text, bot,
         bot.send_message(message.chat.id, f"Error during embedding analysis: {e}")
         return
 
+    # --- STEP 5: GPT-based Reasoning Summary ---
     try:
-        print("NOW TRYING TO GIVE REASONING")
+        bot.send_message(message.chat.id, "Summarising Reasoning...")
+
+        # Filter out articles with empty or placeholder content
+        valid_articles = [
+            article for article in article_data
+            if article.get("article_content", "").strip() and
+               "Main content not found" not in article.get("article_content", "")
+        ]
+
+        # From valid_articles, get the top supporting articles using the top_articles list from embedding results.
         supporting_texts = []
-        for article in results:
+        for article in valid_articles:
             article_url = article.get("url", "")
             # Check if this article's URL is in the top_articles list (supporting articles)
             if any(article_url == ta.get("url") for ta in top_articles):
@@ -159,14 +171,14 @@ def reliability_model(message, user_text, bot,
                 if content:
                     supporting_texts.append(f"Source ({article_url}):\n{content}\n")
 
-        # Also get challenging article content (if available)
-        challenging_text = ""
-        for article in results:
-            if article.get("url", "") == min_article:
-                challenging_text = article.get("article_content", "")
-                break
+        # If no valid supporting articles are found, use a fallback (e.g., use titles or a default message).
+        if not supporting_texts:
+            supporting_texts = ["No sufficient supporting article content could be extracted."]
 
-        reasoning_summary = generate_reasoning_summary(user_text, supporting_texts, challenging_text)
+        # Generate GPT reasoning summary
+        reasoning_summary = generate_reasoning_summary(user_text, supporting_texts, max_score, min_score)
         bot.send_message(message.chat.id, f"Reasoning Summary:\n\n{reasoning_summary}")
+
     except Exception as e:
-        return f"Error generating reasoning summary: {e}"
+        bot.send_message(message.chat.id, f"Error generating reasoning summary: {e}")
+

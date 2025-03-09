@@ -160,13 +160,12 @@ def generate_credible_filter(credible_domains, max_sites=5):
 def verify_keywords_with_sources():
     data = request.get_json()
     keywords = data.get("keywords", "")
+    original_query = data.get("original_query", "")
     max_search_count = data.get("max_search_count", 20)
     min_source_count = data.get("min_source_count", 25)
     keyword_query_percentage = data.get("keyword_query_percentage", 0.8)
     max_sites_in_query = data.get("max_sites_in_query", 5)
     is_singapore_sources = data.get("is_singapore_sources", False)
-
-
 
     if keyword_query_percentage > 1 or keyword_query_percentage < 0.2:
         keyword_query_percentage = 0.5
@@ -199,11 +198,12 @@ def verify_keywords_with_sources():
             import random
             percentage = (random.uniform(keyword_query_percentage, 0.95))
 
-            if len(keywords) <= 10:
-                random_keys = random.choices(keywords, k=int(0.8*(len(keywords)-1)))
+            if (len(original_query.split(" ")) <= 10):
+                base_query = original_query
+
             else:
                 random_keys = random.choices(keywords, k=int(percentage*(len(keywords)-1)))
-            base_query = " ".join(random_keys)
+                base_query = " ".join(random_keys)
 
             if is_singapore_sources:
                 credible_filter = generate_credible_filter(SINGAPORE_DOMAIN, max_sites=3)
@@ -221,7 +221,6 @@ def verify_keywords_with_sources():
                 domain = get_domain(url)
                 match = re.search(pattern, url)
 
-
                 if url in seen_urls:
                     continue
 
@@ -236,8 +235,6 @@ def verify_keywords_with_sources():
 
         finally:
             pass
-
-    # Now perform the search
 
 
     return jsonify({"results": verified_results})
