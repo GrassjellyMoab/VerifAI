@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 import os
 import matplotlib.pyplot as plt
-model = load_model('MobileNetV2_finetuned_model(0.95 loss 0.11).keras')
+
 
 # Define image size based on model input shape
 IMAGE_SIZE = (224, 224)
@@ -46,7 +46,7 @@ def overlay_heatmap_on_image(img, heatmap, alpha=0.4):
     superimposed_img = cv2.cvtColor(superimposed_img, cv2.COLOR_BGR2RGB)
     return superimposed_img
 
-def classify_image_with_gradcam(image_data):
+def classify_image_with_gradcam(image_data,model):
     processed_image = preprocess_image(image_data)
     prediction = model.predict(processed_image)
     class_label = int(np.round(prediction[0][0]))
@@ -59,10 +59,11 @@ def classify_image_with_gradcam(image_data):
 
 
 
-def heatmap_creator(file_path):
+def heatmap_creator(file_path,model):
     # Open your image (or do your Grad-CAM logic)
+
     image = Image.open(file_path)
-    class_label, confidence, overlay_img = classify_image_with_gradcam(image)
+    class_label, confidence, overlay_img = classify_image_with_gradcam(image,model)
 
     print(f"{class_label} {confidence}")
 

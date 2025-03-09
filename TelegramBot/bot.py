@@ -5,8 +5,9 @@ from PIL import Image
 import telebot
 from dotenv import load_dotenv
 
-from app.controllers.model import reliability_model
-from app.controllers.AICheckModel import aiChecker_model
+from Backend.app.controllers.model import reliability_model
+from Backend.app.controllers.AICheckModel import aiChecker_model
+from Backend.app.controllers.heatmap_model import heatmap_creator
 
 load_dotenv()
 
@@ -20,6 +21,8 @@ min_source_count = 40
 keyword_query_percentage = 0.4
 max_sites_in_query = 4
 is_singapore_sources = True
+from tensorflow.keras.models import load_model
+model = load_model('MobileNetV2_finetuned_model(0.95 loss 0.11).keras')
 
 # This dictionary will store each user's current "mode"
 # e.g. user_mode[chat_id] = "reliability" or "ai" or None
@@ -43,6 +46,20 @@ def call_model(message, user_text, isReliability=True):
         )
     else:
         aiChecker_model(message, user_text, bot)
+        if os.path.isfile(user_text):
+            try:
+                processing_msg = bot.send_message(message.chat.id, "Generating heatmap visualization... Please wait.")
+
+                heatmap_path = heatmap_creator(user_text,model) #heatmap generation
+
+                with open(heatmap_path, 'rb') as heatmap_img:
+                    bot.send_photo(message.chat.id, heatmap_img,
+                                   caption="Heatmap visualization showing AI detection regions")
+
+                bot.delete_message(message.chat.id, processing_msg.message_id)
+
+            except Exception as e:
+                bot.send_message(message.chat.id, f"Error generating heatmap: {str(e)}")
 
 
 def send_usage(message, command, usage):
@@ -171,7 +188,7 @@ def reset_parameters_cmd(message):
     view_parameters_cmd(message)
 
 
-@bot.message_handler(commands=['start', 'help'])
+@bot.message_handler(commands=['start'])
 def send_welcome(message):
     """
     Sends a welcome message and presents a custom keyboard with 3 buttons:
@@ -180,9 +197,10 @@ def send_welcome(message):
       - End Conversation
     """
     welcome_text = (
-        "Hello! I'm your FAKERRR bot.\n\n"
-        "Choose one of the options below or set parameters with the /set_* commands.\n"
-        "Type /help for more details."
+        "Hello, I'm VerifAI!\n\n"
+        "I can verify reliability of texts or check if an image is AI-generated. 🕵️ \n\n"
+        "Choose one of the options below or set my parameters of the bot with the /help command!\n\n"
+        "Type /start to see this message again! 😁"
     )
 
     # Create a custom reply keyboard
@@ -194,6 +212,51 @@ def send_welcome(message):
     keyboard.row(end_btn)
 
     bot.send_message(message.chat.id, welcome_text, reply_markup=keyboard)
+    # Initialize user mode to None
+    user_mode[message.chat.id] = None
+
+@bot.message_handler(commands=['help'])
+def send_commands(message):
+    """
+    Sends help information with available commands and their usage
+    """
+    help_text = (
+        "<b>Parameter Settings</b>\n\n"
+
+        "🔧 <b>Basic Parameters:</b>\n"
+        "• /set_redundancy_threshold &lt;integer&gt; \n"
+        "  Usage: To adjust how many redundant checks to perform\n"
+        "  Example: <code>/set_redundancy_threshold 15</code>\n\n"
+
+        "• /set_max_search_count &lt;integer&gt;\n "
+        "  Usage: To set the maximum number of search results\n"
+        "  Example: <code>/set_max_search_count 40</code>\n\n"
+
+        "• /set_min_source_count &lt;integer&gt;\n "
+        "  Usage: To set the minimum sources to consider\n"
+        "  Example: <code>/set_min_source_count 30</code>\n\n"
+
+        "🔍 <b>Search Parameters:</b>\n"
+        "• /set_keyword_query_percentage &lt;float&gt; "
+        "  Usage: Insert a float from 0-1\n"
+        "  Example: <code>/set_keyword_query_percentage 0.5</code>\n\n"
+
+        "• /set_max_sites_in_query &lt;integer&gt;\n "
+        "  Usage: Set the max websites per query\n"
+        "  Example: <code>/set_max_sites_in_query 5</code>\n\n"
+
+        "• /set_is_singapore_sources &lt;true/false&gt;\n "
+        "  Usage: To set whether or not to only use Singapore sources\n"
+        "  Example: <code>/set_is_singapore_sources true</code>\n\n"
+
+        "⚙️ <b>Management Commands:</b>\n"
+        "• /view_parameters - View current settings\n"
+        "• /reset_parameters - Reset to defaults\n\n"
+
+        "Type /start to return to main menu"
+    )
+
+    bot.send_message(message.chat.id, help_text, parse_mode="HTML")
     # Initialize user mode to None
     user_mode[message.chat.id] = None
 
