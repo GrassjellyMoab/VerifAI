@@ -10,6 +10,7 @@ VerifAI is an AI-driven Telegram bot desgined to combat misinfomration in privat
 VerifAI combats misinformation by providing instant, automated fact-checking directly within Telegram. By combining advanced text analysis with AI-driven image detection, VerifAI independently verifies the credibility of text-based claims and detects AI-generated images, ensuring users can separate fact from fiction in real time.
 
 - **Model 1: Claim Verification**  
+
   Uses natural language processing to extract keywords from an input claim, finds credible sources via Google Custom Search, scrapes content from various formats (HTML, XML, PDF), embeds both the claim and the sourced content, and then compares their vector representations to assess reliability.
   **Features**:
   - **TF-IDF Keyword Extraction:** Identifies key terms from the input claim.
@@ -20,6 +21,7 @@ VerifAI combats misinformation by providing instant, automated fact-checking dir
   - **Explanation of Reliability Score** Compares top sources with original claim and leverages OpenAI GPT4-o to provide users with an in-depth explanation of reliability score
 
 - **Model 2: AI Generator Image Detector**
+
   With the rise of AI-generated images and online falsehood, manipulated content are harder to detect. VerifAI allows user to verify images, seperating real images from AI images.
   **Features**:
   - **AI-Genereated Image Detection** Determines whether an image is AI-generate and provides a statistical analysis
