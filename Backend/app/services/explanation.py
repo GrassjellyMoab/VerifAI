@@ -1,18 +1,19 @@
 # explanation.py
-
+from flask import Blueprint, request, jsonify
 import os
 from openai import OpenAI
+from dotenv import load_dotenv
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-from dotenv import load_dotenv
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Load environment variables (make sure OPENAI_API_KEY is set in your .env file)
 load_dotenv()
+explanation_blueprint = Blueprint("explanation_blueprint", __name__)
 
-
-def generate_reasoning_summary(user_text, supporting_texts, max_score, min_score, temperature=0.7):
+@explanation_blueprint.route("/", methods=["POST"])
+def reasoning_route():
     """
-
     Args:
         user_text (str): The user's claim.
         supporting_texts (list of str): A list of texts from supporting sources.
@@ -22,30 +23,40 @@ def generate_reasoning_summary(user_text, supporting_texts, max_score, min_score
     Returns:
         str: A concise reasoning summary produced by GPT.
     """
+
+    data = request.get_json()
+    user_text = data.get("user_text")
+    supporting_texts = data.get("supporting_texts", [])
+    min_score = data.get("min_score")
+    max_score = data.get("max_score")
+    temperature = data.get("temperature")
+
     # Combine the supporting texts into one block, separated by newlines
     supporting_combined = "\n\n".join(supporting_texts)
 
-    print(supporting_texts)
+    # print(supporting_texts)
     # Build the GPT prompt
     prompt = (
-            "You are a fact-checking assistant on a telegram bot. Below is the user's claim, "
-            "followed by content scraped from two best supporting source. "
-            "You are also provided 2 scores, max scores, and min scores which are derived from cosine similarity comparison between the user texts"
-            "with the articles that provides the best similarity score and the worst similarity score. respectively."
-            "Here is the the way we gauge this scores: \n"
-            "- if min score < -0.3: Highly unreliable. Sources suggest opposite of the claim. \n"
-            "- if max score < 0.55: Unreliable. No credible sources back up the claim. \n"
-            "- if max score > 0.5 and max score < 0.60: It is ambiguous whether the claim is reliable. Some credible sources support it slightly. \n"
-            "- if max score > 0.60: There is strong evidence that the claim is reliable. \n\n"
-            "Here are the scores, \n"
-            f"max_score = {max_score} \n"
-            f"min_score = {min_score} \n\n"
-            "Now Consider the scores, and if necessary explain in clear terms how these sources supports or disproves the user's statements in a simple user friendly manner"
-            "For example, if the user's claim is that Donald Trump is the current president, an article can indicate in a sentence that Donald Trump is the president by mentioning the words 'President Trump' "
-            "This statement will support the user's claim and you must give the reasoning for supporting this claim and which article is from"
-            "if you feel that the supported claims are insufficient and after you consider the max and min scores,you can choose to refute the claim or accept the claim.\n\n"
-            f"User's claim:\n{user_text}\n\n"
-            "Supporting sources:\n" + supporting_combined + "\n\n" + "Please provide a concise reasoning summary."
+        "You are a fact-checking assistant for a Telegram bot, responsible for verifying the reliability of user claims. "
+        "Based on supporting sources and credibility scores, determine whether the claim is highly reliable, unreliable, ambiguous, or false and provide a brief reasoning (2-3 sentences) in clear and simple language.\n\n"
+        
+        "### Reliability Scoring Guide:\n"
+        "- Highly unreliable (min score < -0.3): Sources contradict the claim.\n"
+        "- Unreliable (max score < 0.50): No credible sources support the claim.\n"
+        "- Ambiguous (max score 0.50 - 0.55): Some support, but evidence is weak.\n"
+        "- Reliable (max score > 0.55): Strong evidence from credible sources.\n\n"
+        
+        f"User's Claim: {user_text}\n\n"
+        f"Supporting Sources:\n{supporting_combined}\n\n"
+        
+        "### Instructions for Your Response:\n"
+        "- Start with the verdict (e.g., 'This claim is highly reliable/unreliable/ambiguous because...')\n"
+        "- Explain the reasoning in simple and concise terms (2-3 sentences).\n"
+        "- Mention supporting or contradicting sources where relevant.\n"
+        "- Keep the tone clear and user-friendly—avoid technical jargon, and do not mention the numerical score in the response at all, the users dont need to see the exact score in the response.\n\n"
+        
+        "### Example Response:\n"
+        "'Highly Reliable. This claim is widely reported by multiple credible news sources, including The Straits Times, confirming that Donald Trump is the current president of the USA.'"
     )
 
     try:
@@ -56,20 +67,6 @@ def generate_reasoning_summary(user_text, supporting_texts, max_score, min_score
         ],
         temperature=temperature)
         reasoning_text = response.choices[0].message.content.strip()
-        return reasoning_text
+        return jsonify({"reasoning_summary": reasoning_text})
     except Exception as e:
-        return f"Error generating reasoning summary: {e}"
-
-
-
-# Example usage if running this file directly for testing
-if __name__ == "__main__":
-    user_claim = "The government has announced a new tax reform."
-    supporting = [
-        "According to the official press release, a tax reform was introduced to stimulate economic growth.",
-        "Reputable news outlets reported detailed policy changes supporting the tax reform."
-    ]
-    challenging = "An independent analysis suggests that the proposed tax reform is unlikely to have any significant impact, contradicting official statements."
-    summary = generate_reasoning_summary(user_claim, supporting, challenging)
-    print("Generated Reasoning Summary:")
-    print(summary)
+        return jsonify({"error": f"Error generating reasoning summary: {e}"}), 500

@@ -211,10 +211,10 @@ def verify_keywords_with_sources():
                 credible_filter = generate_credible_filter(CREDIBLE_DOMAINS, max_sites=max_sites_in_query)
             search_query = f"{base_query} ({credible_filter} OR {credible_filter})"
 
-            print(f"query: {search_query}")
+            # print(f"query: {search_query}")
             search_results = google_custom_search(search_query)
-            print(f"search number: {counter}\n"
-                  f"{search_results}")
+            # print(f"search number: {counter}\n"
+            #       f"{search_results}")
 
             for result in search_results:
                 url = result.get("url")
