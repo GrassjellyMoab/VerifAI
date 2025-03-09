@@ -29,6 +29,8 @@ def __remove_redundant_keywords(keywords, redundancy_threshold=15):
     """
     if len(keywords) <= redundancy_threshold:
         return keywords
+    
+    keywords = [re.sub(r'[^a-zA-Z0-9\s]', '', kw).strip() for kw in keywords]
 
     keywords = sorted(keywords, key=len, reverse=True)  # Sort by length (longest first)
     unique_keywords = []
