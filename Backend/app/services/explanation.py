@@ -1,17 +1,17 @@
 # explanation.py
 
 import os
-import openai
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 from dotenv import load_dotenv
 
 # Load environment variables (make sure OPENAI_API_KEY is set in your .env file)
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def generate_reasoning_summary(user_text, supporting_texts, challenging_text, temperature=0.7):
+def generate_reasoning_summary(user_text, supporting_texts, max_score, min_score, temperature=0.7):
     """
-    Generates a reasoning summary for the provided claim using GPT-3.5-turbo.
 
     Args:
         user_text (str): The user's claim.
@@ -25,27 +25,37 @@ def generate_reasoning_summary(user_text, supporting_texts, challenging_text, te
     # Combine the supporting texts into one block, separated by newlines
     supporting_combined = "\n\n".join(supporting_texts)
 
+    print(supporting_texts)
     # Build the GPT prompt
     prompt = (
-            "You are a fact-checking assistant. Below is the user's claim, "
-            "followed by excerpts from two supporting sources and one challenging source. "
-            "Explain in clear terms how these sources support or refute the claim.\n\n"
+            "You are a fact-checking assistant on a telegram bot. Below is the user's claim, "
+            "followed by content scraped from two best supporting source. "
+            "You are also provided 2 scores, max scores, and min scores which are derived from cosine similarity comparison between the user texts"
+            "with the articles that provides the best similarity score and the worst similarity score. respectively."
+            "Here is the the way we gauge this scores: \n"
+            "- if min score < -0.3: Highly unreliable. Sources suggest opposite of the claim. \n"
+            "- if max score < 0.55: Unreliable. No credible sources back up the claim. \n"
+            "- if max score > 0.5 and max score < 0.60: It is ambiguous whether the claim is reliable. Some credible sources support it slightly. \n"
+            "- if max score > 0.60: There is strong evidence that the claim is reliable. \n\n"
+            "Here are the scores, \n"
+            f"max_score = {max_score} \n"
+            f"min_score = {min_score} \n\n"
+            "Now Consider the scores, and if necessary explain in clear terms how these sources supports or disproves the user's statements in a simple user friendly manner"
+            "For example, if the user's claim is that Donald Trump is the current president, an article can indicate in a sentence that Donald Trump is the president by mentioning the words 'President Trump' "
+            "This statement will support the user's claim and you must give the reasoning for supporting this claim and which article is from"
+            "if you feel that the supported claims are insufficient and after you consider the max and min scores,you can choose to refute the claim or accept the claim.\n\n"
             f"User's claim:\n{user_text}\n\n"
-            "Supporting sources:\n" + supporting_combined + "\n\n"
-                                                            "Challenging source:\n" + challenging_text + "\n\n"
-                                                                                                         "Please provide a concise reasoning summary."
+            "Supporting sources:\n" + supporting_combined + "\n\n" + "Please provide a concise reasoning summary."
     )
 
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a factual, neutral assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=temperature
-        )
-        reasoning_text = response["choices"][0]["message"]["content"].strip()
+        response = client.chat.completions.create(model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a factual, neutral assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=temperature)
+        reasoning_text = response.choices[0].message.content.strip()
         return reasoning_text
     except Exception as e:
         return f"Error generating reasoning summary: {e}"
