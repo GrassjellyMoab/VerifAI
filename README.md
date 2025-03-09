@@ -27,8 +27,8 @@ VerifAI mitigates misinfomration by providing instant, automated fact-checking d
 
 ---
 
-## Requirements
-
+## Tech Stack 
+![Python](https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white)
 | **Category**                 | **Technology Used**                           |
 |------------------------------|----------------------------------------------|
 | **Programming Language**     | Python 3.x                                   |
@@ -37,7 +37,7 @@ VerifAI mitigates misinfomration by providing instant, automated fact-checking d
 | **AI Image Analysis**        | OpenCV, TensorFlow, PyTorch                 |
 | **API Integrations**         | Google Custom Search API, Telegram API      |
 | **Bot Framework**            | Python Telegram Bot API                      |
-| **Deployment**               | Docker, Flask (for API handling)             |
+| **Deployment**               | Flask             |
 
 
 - **Programming Language:** Python 3.x
@@ -72,64 +72,9 @@ VerifAI mitigates misinfomration by providing instant, automated fact-checking d
     - Obtain your Google Custom Search API key and set up a Custom Search Engine.
     - Configure your environment variables or update the configuration file (e.g., `config.json`) with your API credentials.
 
----
-
-## Usage
-
-### Model 1: Claim Verification
-
-1. **Prepare your input claim text.**
-2. **Run the text verification script:**
-   ```bash
-   python model1/claim_verifier.py --claim "Your input claim here"
-   ```
-3. **Output:**  
-   The script will output the similarity score between the input claim and the scraped content from credible sources, indicating the claim's reliability.
-
-### Model 2: Image Authenticity Detection
-
-1. **For Image AI Detection:**
-   ```bash
-   python model2/image_detector.py --image_path path/to/your/image.jpg
-   ```
-2. **For URL Verification:**
-   ```bash
-   python model2/url_validator.py --url "https://example.com/image.jpg"
-   ```
-3. **Output:**  
-   Each service will return a verdict on whether the image appears to be AI-generated or manipulated.
 
 ---
 
-## Project Structure
-
-```
-FakeInfoDetector/
-├── model1/
-│   ├── claim_verifier.py       # Script for text-based claim verification
-│   ├── tfidf_extractor.py      # Module for TF-IDF based keyword extraction
-│   ├── google_search.py        # Module for interacting with Google Custom Search
-│   ├── scraper.py              # Module for scraping HTML, XML, and PDF content
-│   └── embedder.py             # Module for embedding and vector comparison
-├── model2/
-│   ├── image_detector.py       # Service to detect AI-generated images
-│   ├── url_validator.py        # Service to validate image URLs
-│   └── ai_model.py             # AI model integration for image analysis
-├── config/
-│   └── config.json             # Configuration file for API keys and parameters
-├── requirements.txt            # Python dependencies
-└── README.md                   # This readme file
-```
-
----
-
-## Acknowledgments
-
-- Thanks to the Google Custom Search team for providing a robust API.
-- Inspired by the growing need for reliable misinformation detection in today’s digital landscape.
-- Special thanks to the hackathon organizers and the developer community for their valuable feedback.
-
----
 
 *Note: This project is developed for hackathon demonstration purposes. Further improvements and rigorous testing are needed before considering production deployment.*
 ```
