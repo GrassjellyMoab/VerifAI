@@ -62,6 +62,7 @@ def call_model(message, user_text, isReliability=True):
 
             except Exception as e:
                 bot.send_message(message.chat.id, f"Error generating heatmap: {str(e)}")
+    send_again(message)
 
 
 def send_usage(message, command, usage):
@@ -144,6 +145,28 @@ def send_welcome(message):
     bot.send_message(
         message.chat.id,
         welcome_text,
+        reply_markup=markup,
+        parse_mode="HTML"
+    )
+    # Initialize user mode to None
+    user_mode[message.chat.id] = None
+
+
+def send_again(message):
+    again_text = (
+        "Enter a claim to check its reliability or an image to check if it is AI generated. 🕵️ \n\n"
+        "Choose one of the options below or set my parameters of the bot with the /help command!\n\n"
+        "Type /start to see your options again! 😁"
+    )
+    markup = types.InlineKeyboardMarkup(row_width=1)
+    reliability_btn = types.InlineKeyboardButton("Check Text Reliability 💡", callback_data="reliability_mode")
+    ai_btn = types.InlineKeyboardButton("Detect AI Image 🤖", callback_data="ai_mode")
+    end_btn = types.InlineKeyboardButton("End Conversation", callback_data="end_convo")
+    markup.add(reliability_btn, ai_btn, end_btn)
+
+    bot.send_message(
+        message.chat.id,
+        again_text,
         reply_markup=markup,
         parse_mode="HTML"
     )
