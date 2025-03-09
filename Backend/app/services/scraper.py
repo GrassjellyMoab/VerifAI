@@ -199,8 +199,11 @@ def verify_keywords_with_sources():
             import random
             percentage = (random.uniform(keyword_query_percentage, 0.95))
 
-            random_keys = random.choices(keywords, k=int(percentage*(len(keywords)-1)))
-            base_query = " ".join(random_keys)
+            if (len(keywords) <= 10):
+                random_keys = keywords
+            else:
+                random_keys = random.choices(keywords, k=int(percentage*(len(keywords)-1)))
+                base_query = " ".join(random_keys)
 
             if is_singapore_sources:
                 credible_filter = generate_credible_filter(SINGAPORE_DOMAIN, max_sites=3)

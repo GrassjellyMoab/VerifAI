@@ -180,7 +180,7 @@ def send_welcome(message):
       - End Conversation
     """
     welcome_text = (
-        "Hello! I'm your reliability bot.\n\n"
+        "Hello! I'm your FAKERRR bot.\n\n"
         "Choose one of the options below or set parameters with the /set_* commands.\n"
         "Type /help for more details."
     )
@@ -210,7 +210,7 @@ def handle_text(message):
     # Check if the user pressed a button
     if text == "Check Text Reliability":
         user_mode[chat_id] = "reliability"
-        bot.reply_to(message, "You selected: Check Text Reliability.\nSend me text or a link to analyze.")
+        bot.reply_to(message, "You selected: Check Text Reliability.\nSend me text or a image to analyse.")
         return
     elif text == "Detect AI Image":
         user_mode[chat_id] = "ai"

@@ -48,41 +48,62 @@ def compute_credibility_score():
     average_score = 0
     supporting_article = "None"
     challenging_article = "None"
-    return_vec = []
+
     if not _:
         return jsonify({"credibility_score": total_score})
 
+    similarities = []  # store tuples of (similarity, url)
+
     for article in _:
         url = article.get("url")
-        reliability = article.get("reliability")
-        article_content = article.get("article_content")
+        article_content = article.get("article_content", "")
 
         if not article_content:
             continue
 
         article_vec = embed_text(article_content)
         sim = compute_similarity(input_vec, article_vec)
+        similarities.append((sim, url))
 
-        if sim > highest_score:
-            highest_score = max(sim, highest_score)
-            supporting_article = url
-        total_score +=sim
-        average_score = total_score / len(_)
+    if not similarities:
+        return jsonify({
+            "average_score": 0,
+            "highest_score": 0,
+            "lowest_score": 0,
+            "supporting_article": None,
+            "challenging_article": None,
+            "top_articles": [],
+            "message": "No valid articles with content."
+        })
 
-        if sim < min_score:
-            min_score = min(sim,min_score)
-            challenging_article = url
+    # Sort articles by similarity descending (highest first)
+    similarities.sort(key=lambda x: x[0], reverse=True)
 
+    # Calculate average, highest and lowest scores
+    scores_only = [s[0] for s in similarities]
+    highest_score = max(scores_only)
+    lowest_score = min(scores_only)
+    average_score = sum(scores_only) / len(scores_only)
 
-    # 5) Final credibility score (interpret as you wish)
-    return jsonify({"average_score":average_score,
-                    "highest_score": highest_score,
-                    "lowest_score" : min_score,
-                    "supporting_article": supporting_article,
-                    "challenging_article": challenging_article})
+    # Get the top 2 articles (or fewer if less than 2)
+    top_2 = similarities[:2]
 
+    # The best supporting article is the one with the highest similarity
+    supporting_article = similarities[0][1]
+    # The most "challenging" article is the one with the lowest similarity
+    challenging_article = similarities[-1][1]
 
-# ------------------------------------------
-# EXAMPLE USAGE
-# ------------------------------------------
+    response_data = {
+        "average_score": average_score,
+        "highest_score": highest_score,
+        "lowest_score": lowest_score,
+        "supporting_article": supporting_article,
+        "challenging_article": challenging_article,
+        "top_articles": [
+            {"similarity": sim, "url": url} for sim, url in top_2
+        ]
+    }
+
+    return jsonify(response_data)
+
 

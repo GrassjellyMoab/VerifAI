@@ -25,8 +25,7 @@ def aiChecker_model(message, user_text, bot):
         if "ai" in result["report"] and "confidence" in result["report"]["ai"]:
             ai_confidence = result["report"]["ai"]["confidence"]
             human_confidence = result["report"]["human"]["confidence"]
-            output += f"AI confidence: {ai_confidence:.2%}\n"
-            output += f"Human confidence: {human_confidence:.2%}\n"
+            output += f"AI Likelihood: {ai_confidence:.2%}\n"
 
             # If there is a generator breakdown, include that information.
             if "generator" in result["report"]:
@@ -61,8 +60,6 @@ def aiChecker_model(message, user_text, bot):
     else:
         output += "Unknown input type.\n"
 
-    output += f"\nReport ID: {result.get('id', 'N/A')}\n"
-    output += f"Created At: {result.get('created_at', 'N/A')}\n"
     output += "===================================="
 
     # Send the analysis result to the Telegram chat
