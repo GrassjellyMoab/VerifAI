@@ -17,7 +17,7 @@ scrape_content_url = "http://localhost:5050/scrape_content"
 embedding_url = "http://localhost:5050/embedding"
 
 def reliability_check(min_score, max_score, min_article, max_article):
-    if min_score < -0.3:
+    if min_score < -0.5:
         return f"Highly Unreliable. Sources suggest opposite of the claim. \n\n source URL: {min_article}"
 
     if max_score < 0.55:
