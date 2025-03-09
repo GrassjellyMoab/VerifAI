@@ -1,34 +1,23 @@
-# FakeInfoDetector Hackathon Project
+# VerifAI Bot
 
-FakeInfoDetector is an experimental project developed during a hackathon to help verify the authenticity of information. It features two main models: one for text-based claim verification and another for image authenticity detection.
+VerifAI is an experimental project developed for Techfest 2025 to help verify the authenticity of information. It features two main models: one for text-based claim verification and another for image authenticity detection.
 
 ---
 
 ## Overview
 
-The project aims to combat misinformation by combining traditional text analysis techniques with modern AI-driven image detection. The two models work independently to assess the credibility of claims and visual content.
+VerifAI aims to combat misinformation by combining text analysis techniques with AI-driven image detection. The two models work independently to assess the credibility of claims and visual content.
 
 - **Model 1: Claim Verification**  
   Uses natural language processing to extract keywords from an input claim, finds credible sources via Google Custom Search, scrapes content from various formats (HTML, XML, PDF), embeds both the claim and the sourced content, and then compares their vector representations to assess reliability.
-
-- **Model 2: Image Authenticity Detection**  
-  Provides two services:
-  - **AI Detector for Images:** Checks whether a given picture is AI-generated.
-  - **URL Verification Service:** Uses AI to validate that the image URL points to a genuine image rather than a manipulated or AI-generated one.
-
----
-
-## Features
-
-- **Text Claim Verification (Model 1)**
+  **Features:
   - **TF-IDF Keyword Extraction:** Identifies key terms from the input claim.
   - **Google Custom Search Integration:** Uses extracted keywords to locate credible online sources.
   - **Content Scraping:** Retrieves text content from various formats (HTML, XML, PDF).
   - **Embedding & Vector Comparison:** Embeds both the claim and scraped content to compare similarity and determine credibility.
 
-- **Image Authenticity Detection (Model 2)**
-  - **AI Image Detector:** Analyzes images to determine if they are AI-generated.
-  - **URL Validation:** Checks if the provided image URL leads to a genuine image using AI-based verification.
+- **Model 2: Image Authenticity Detection**
+  One can send the bot an image or URL of an image of it will check whether the given picture is AI-generated. It compares the input image to known patterns and artifacts associated with various AI models and identifies unique characteristics to determine if it is AI-generated or human-made.
 
 ---
 
@@ -114,18 +103,6 @@ FakeInfoDetector/
 ├── requirements.txt            # Python dependencies
 └── README.md                   # This readme file
 ```
-
----
-
-## Contributing
-
-Contributions are welcome! Please fork the repository and submit a pull request with your proposed changes. For major changes, open an issue first to discuss what you would like to change.
-
----
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
 ---
 
