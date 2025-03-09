@@ -63,7 +63,7 @@ def tf_idf_keywords(user_text,redundancy_threshold=15):
     """
     # Tokenize into sentences
     sentences = __basic_tokenisation(user_text)  # split into words
-    if len(sentences) >= 2:
+    if len(sentences) > 2:
         extracted = __stop_words_removing_processor(sentences)
 
     else:
