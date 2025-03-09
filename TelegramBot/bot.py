@@ -20,7 +20,7 @@ bot = telebot.TeleBot(BOT_TOKEN)
 redundancy_threshold = 10
 max_search_count = 35
 min_source_count = 40
-keyword_query_percentage = 0.4
+keyword_query_percentage = 0.6
 max_sites_in_query = 4
 is_singapore_sources = True
 from tensorflow.keras.models import load_model

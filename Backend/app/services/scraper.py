@@ -1,5 +1,6 @@
 import os
 import time
+import random
 
 import requests
 from urllib.parse import urlparse
@@ -194,20 +195,21 @@ def verify_keywords_with_sources():
         counter += 1
 
         try:
-            import random
-            percentage = (random.uniform(keyword_query_percentage, 0.95))
-            # if len(keywords) <= 10:
-            #     random_keys = random.choices(keywords, k=int(0.9*(len(keywords)-1)))
-            # else:
-            #     random_keys = random.choices(keywords, k=int(percentage*(len(keywords)-1)))
-            random_keys = random.choices(keywords, k=int(percentage * (len(keywords) - 1)))
+            percentage = (random.uniform(keyword_query_percentage, 0.8))
+
+            if len(keywords) <= 10:
+                random_keys = random.choices(keywords, k=int(0.8*(len(keywords)-1)))
+            elif len(keywords) <= 20:
+                random_keys = random.choices(keywords, k=int(0.7 * (len(keywords) - 1)))
+            else:
+                random_keys = random.choices(keywords, k=int(percentage*(len(keywords)-1)))
 
             base_query = " ".join(random_keys)
 
             if is_singapore_sources:
-                credible_filter = generate_credible_filter(SINGAPORE_DOMAIN, max_sites=3)
+                credible_filter = generate_credible_filter(SINGAPORE_DOMAIN, max_sites=4)
             else:
-                credible_filter = generate_credible_filter(CREDIBLE_DOMAINS, max_sites=max_sites_in_query)
+                credible_filter = generate_credible_filter(CREDIBLE_DOMAINS, max_sites=6)
             search_query = f"{base_query} ({credible_filter} OR {credible_filter})"
 
             print(f"query: {search_query}")
