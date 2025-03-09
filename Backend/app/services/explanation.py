@@ -1,7 +1,7 @@
 # explanation.py
-
 import os
 from openai import OpenAI
+from flask import Blueprint, request, jsonify
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 from dotenv import load_dotenv
@@ -9,21 +9,37 @@ from dotenv import load_dotenv
 # Load environment variables (make sure OPENAI_API_KEY is set in your .env file)
 load_dotenv()
 
+explanation_blueprint = Blueprint("explanation_blueprint", __name__)
 
-def generate_reasoning_summary(user_text, supporting_texts, max_score, min_score, temperature=0.7):
+
+@explanation_blueprint.route("/", methods=["POST"])
+def reasoning_route():
     """
-
-    Args:
-        user_text (str): The user's claim.
-        supporting_texts (list of str): A list of texts from supporting sources.
-        challenging_text (str): The text from a challenging source.
-        temperature (float): Optional temperature parameter for the model (default is 0.7).
+    Expects a JSON payload with:
+      - user_text: string (the user's claim)
+      - supporting_texts: list of strings (content from supporting sources)
+      - max_score: number (highest similarity score)
+      - min_score: number (lowest similarity score)
+      - temperature (optional): float (default 0.7)
 
     Returns:
-        str: A concise reasoning summary produced by GPT.
+      JSON with the generated reasoning summary.
     """
+    data = request.get_json()
+    user_text = data.get("user_text", "")
+    supporting_texts = data.get("supporting_texts", [])
+    max_score = data.get("max_score")
+    min_score = data.get("min_score")
+    temperature = data.get("temperature", 0.7)
+
+    if not user_text or not supporting_texts or max_score is None or min_score is None:
+        return jsonify({"error": "Missing required parameters"}), 400
     # Combine the supporting texts into one block, separated by newlines
     supporting_combined = "\n\n".join(supporting_texts)
+
+    MAX_SUPPORTING_LENGTH = 3500  # set your desired character limit
+    if len(supporting_combined) > MAX_SUPPORTING_LENGTH:
+        supporting_combined = supporting_combined[:MAX_SUPPORTING_LENGTH] + "..."
 
     print(supporting_texts)
     # Build the GPT prompt
@@ -56,20 +72,8 @@ def generate_reasoning_summary(user_text, supporting_texts, max_score, min_score
         ],
         temperature=temperature)
         reasoning_text = response.choices[0].message.content.strip()
-        return reasoning_text
+        return jsonify({"reasoning_summary": reasoning_text})
     except Exception as e:
-        return f"Error generating reasoning summary: {e}"
+        return jsonify({"error": f"Error generating reasoning summary: {e}"}), 500
 
 
-
-# Example usage if running this file directly for testing
-if __name__ == "__main__":
-    user_claim = "The government has announced a new tax reform."
-    supporting = [
-        "According to the official press release, a tax reform was introduced to stimulate economic growth.",
-        "Reputable news outlets reported detailed policy changes supporting the tax reform."
-    ]
-    challenging = "An independent analysis suggests that the proposed tax reform is unlikely to have any significant impact, contradicting official statements."
-    summary = generate_reasoning_summary(user_claim, supporting, challenging)
-    print("Generated Reasoning Summary:")
-    print(summary)

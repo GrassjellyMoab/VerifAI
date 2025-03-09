@@ -248,8 +248,8 @@ def callback_handle_command(call):
     elif call.data == "exec_view_parameters":
         # Execute view parameters directly
         reply = (
-            f"min_source_count         : {min_source_count}\n"
-            f"is_singapore_sources     : {is_singapore_sources}\n"
+            f"min sources before eval     : {min_source_count}\n"
+            f"are sources from singapore  : {is_singapore_sources}\n"
         )
         bot.edit_message_text(
             chat_id=chat_id,
