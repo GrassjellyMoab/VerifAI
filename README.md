@@ -3,11 +3,11 @@
 VerifAI is an AI-driven Telegram bot desgined to combat misinfomration in private messaging apps such as Telegram. Developed for TechFest 2025, VerifAI utilizes Natural Language Processing and AI-Powered image analysis to detect falsehoods
 
 ---
-## **The Problem**: Why VerifAI
+## **The Problem**: The Rise of Online Falsehood
 65% of adults in Singapore struggle to differentiate between real and fake online content. With false information spreading effortlessly through a single forward button, online falsehoods proliferate at an alarming rate. Meanwhile, existing fact-checking tools remain slow, unreliable, and require tedious manual verification. 
 
 ## **Solution**: VerifAI 
-VerifAI mitigates misinfomration by providing instant, automated fact-checking directly through a Telegram bot. VerifAI aims to combat misinformation by combining text analysis techniques with AI-driven image detection. The two models work independently to assess the credibility of claims and likelihood of AI generated images respectively.
+VerifAI combats misinformation by providing instant, automated fact-checking directly within Telegram. By combining advanced text analysis with AI-driven image detection, VerifAI independently verifies the credibility of text-based claims and detects AI-generated images, ensuring users can separate fact from fiction in real time.
 
 - **Model 1: Claim Verification**  
   Uses natural language processing to extract keywords from an input claim, finds credible sources via Google Custom Search, scrapes content from various formats (HTML, XML, PDF), embeds both the claim and the sourced content, and then compares their vector representations to assess reliability.
@@ -68,10 +68,7 @@ VerifAI mitigates misinfomration by providing instant, automated fact-checking d
 3. **Set Up API Credentials:**
     - Obtain your Google Custom Search API key and set up a Custom Search Engine.
     - Configure your environment variables or update the configuration file (e.g., `config.json`) with your API credentials.
-
-
 ---
 
-
-*Note: This project is developed for hackathon demonstration purposes. Further improvements and rigorous testing are needed before considering production deployment.*
+*Note: This project was developed as part of TechFest 2025 and is intended for experimental and demonstration purposes. While VerifAI provides real-time verification, it should not be considered a definitive authority on misinformation. Further development and testing are needed before deployment in production environments.*
 ```
