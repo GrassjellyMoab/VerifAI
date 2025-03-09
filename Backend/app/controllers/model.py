@@ -1,10 +1,15 @@
-
 import requests
 import os
+import re
 import pytesseract as te
 from PIL import Image
 import telebot
 from dotenv import load_dotenv
+from app.services.explanation import generate_reasoning_summary
+
+load_dotenv()
+
+Openai_API_KEY = os.getenv("OPENAI_API_KEY")
 
 verify_url = "http://localhost:5050/verify"
 scrape_url = "http://localhost:5050/scrape"
@@ -32,6 +37,7 @@ def reliability_model(message, user_text, bot,
                       ):
 
     global keywords, reply_data, results, score, return_data
+
     payload = {"text": user_text,
                "redundancy_threshold": redundancy_threshold
                # how many keywords are required to simplify keyword searches; default 15
@@ -46,11 +52,8 @@ def reliability_model(message, user_text, bot,
             reply_msg = "Error verifying. Server responded with an error."
     except Exception as e:
         reply_msg = f"Error: {e}"
-    # WORKS TILL HERE
+
     bot.send_message(message.chat.id, reply_msg)
-    """
-    till this point was doing tf-idf
-    """
 
     """
     scraper 
@@ -66,7 +69,6 @@ def reliability_model(message, user_text, bot,
                 "max_sites_in_query": max_sites_in_query,
                 "is_singapore_sources": is_singapore_sources
                 }
-    import re
 
     try:
         response = requests.post(scrape_url, json=payload2)
@@ -83,7 +85,6 @@ def reliability_model(message, user_text, bot,
                     url = result.get("url", "")
                     if url.endswith(".xml"):
                         continue
-
                     return_data += f"{title}\nlink: {url}\n\n\n"
 
         else:
@@ -95,7 +96,6 @@ def reliability_model(message, user_text, bot,
         return None
     bot.send_message(message.chat.id, return_data)
     bot.send_message(message.chat.id, "extracting content of sources...")
-    # WORKS TILL HERE
 
     """
     content Scraper
@@ -108,7 +108,6 @@ def reliability_model(message, user_text, bot,
             data = response.json()
             results = data.get("results", "N/A")
 
-
         else:
             reply_msg = "Error scraping. Server responded with an error."
     except Exception as e:
@@ -117,29 +116,57 @@ def reliability_model(message, user_text, bot,
     bot.send_message(message.chat.id, "finished extracting articles content...")
 
     """
-    works till here
     now embedding:
-
+    
     """
+
     bot.send_message(message.chat.id, "analysing content...")
     payload4 = {"input_text": user_text,
                 "article_info": results}
     try:
         response = requests.post(embedding_url, json=payload4)
-
         data = response.json()
+
         results = data.get("results", "N/A")  # all articles info
+
         input_vector = data.get("input_vector", "N/A")
         average_score = data.get("average_score", "N/A")
         max_score = data.get("highest_score", "N/A")
         min_score = data.get("lowest_score", "N/A")
+
+        # Get best/worst article URLs
         max_article = data.get("supporting_article", "N/A")
         min_article = data.get("challenging_article", "N/A")
+
+        top_articles = data.get("top_articles", [])
 
         bot.send_message(message.chat.id, f"average score is: {average_score}\nhighest score is: {max_score}\nlowest score is: {min_score}")
 
         bot.reply_to(message, reliability_check(min_score, max_score,min_article,max_article))
 
-
     except Exception as e:
-        reply_data = f"Error: {e}"
+        bot.send_message(message.chat.id, f"Error during embedding analysis: {e}")
+        return
+
+    try:
+        print("NOW TRYING TO GIVE REASONING")
+        supporting_texts = []
+        for article in results:
+            article_url = article.get("url", "")
+            # Check if this article's URL is in the top_articles list (supporting articles)
+            if any(article_url == ta.get("url") for ta in top_articles):
+                content = article.get("article_content", "")
+                if content:
+                    supporting_texts.append(f"Source ({article_url}):\n{content}\n")
+
+        # Also get challenging article content (if available)
+        challenging_text = ""
+        for article in results:
+            if article.get("url", "") == min_article:
+                challenging_text = article.get("article_content", "")
+                break
+
+        reasoning_summary = generate_reasoning_summary(user_text, supporting_texts, challenging_text)
+        bot.send_message(message.chat.id, f"Reasoning Summary:\n\n{reasoning_summary}")
+    except Exception as e:
+        return f"Error generating reasoning summary: {e}"
