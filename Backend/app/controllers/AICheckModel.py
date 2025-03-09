@@ -13,7 +13,7 @@ def aiChecker_model(message, user_text, bot):
     if "report" in result and "confidence" in result["report"]:
         input_type = 'voice'
 
-    output = "===== AIorNOT ANALYSIS RESULTS =====\n"
+    output = "===== RESULTS =====\n"
 
     if input_type == 'image':
         verdict = result["report"].get("verdict", "N/A")
@@ -32,19 +32,7 @@ def aiChecker_model(message, user_text, bot):
                     confidence = details.get("confidence", 0)
                     is_detected = details.get("is_detected", False)
                     status = "DETECTED" if is_detected else "Not Detected"
-                    output += f"  {generator_name}: {status} (confidence: {confidence:.2%})\n"
-
-        # Include any facet information (e.g. quality or NSFW checks)
-        if "facets" in result:
-            output += "\nImage Quality Checks:\n"
-            for facet, details in result["facets"].items():
-                is_detected = details.get("is_detected", False)
-                if facet == "quality":
-                    quality_status = "PASS" if is_detected else "FAIL"
-                    output += f"  Image Quality: {quality_status}\n"
-                elif facet == "nsfw":
-                    nsfw_status = "Not Detected" if not is_detected else "Detected"
-                    output += f"  NSFW Content: {nsfw_status}\n"
+                    output += f"  {generator_name}:\n   • {status} (confidence: {confidence:.2%})\n"
 
     elif input_type == 'voice':
         verdict = result["report"].get("verdict", "N/A")
@@ -56,8 +44,6 @@ def aiChecker_model(message, user_text, bot):
 
     else:
         output += "Unknown input type.\n"
-
-    output += "===================================="
 
     # Send the analysis result to the Telegram chat
     bot.send_message(message.chat.id, output)

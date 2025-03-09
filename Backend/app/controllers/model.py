@@ -5,7 +5,6 @@ import pytesseract as te
 from PIL import Image
 import telebot
 from dotenv import load_dotenv
-from app.services.explanation import generate_reasoning_summary
 
 load_dotenv()
 
@@ -15,6 +14,7 @@ verify_url = "http://localhost:5050/verify"
 scrape_url = "http://localhost:5050/scrape"
 scrape_content_url = "http://localhost:5050/scrape_content"
 embedding_url = "http://localhost:5050/embedding"
+explanation_url = "http://localhost:5050/explanation"
 
 
 def reliability_check(min_score, max_score, min_article, max_article):
@@ -39,36 +39,31 @@ def reliability_model(message, user_text, bot,
                       ):
     global keywords, reply_data, results, min_score, max_score, return_data, article_data
 
-    # First loading message
-    keywords_loading_msg = bot.send_message(message.chat.id, "Extracting Key Words...")
-
     payload = {"text": user_text,
                "redundancy_threshold": redundancy_threshold
                # how many keywords are required to simplify keyword searches; default 15
                }
     try:
+        bot.send_chat_action(message.chat.id, "typing")
         response = requests.post(verify_url, json=payload)
         if response.status_code == 200:
             data = response.json()
             keywords = data.get("keywords", " ")
-            # Delete loading message before sending the result
-            bot.delete_message(message.chat.id, keywords_loading_msg.message_id)
-            reply_msg = f"Extracted Keywords:\n\n{keywords}"
+            reply_msg = f"Extracting Key Words:\n\nKeywords: {keywords}"
         else:
-            bot.delete_message(message.chat.id, keywords_loading_msg.message_id)
             reply_msg = "Error verifying. Server responded with an error."
     except Exception as e:
-        try:
-            bot.delete_message(message.chat.id, keywords_loading_msg.message_id)
-        except:
-            pass
         reply_msg = f"Error: {e}"
 
     bot.send_message(message.chat.id, reply_msg)
 
-    # Second loading message
-    sources_loading_msg = bot.send_message(message.chat.id, "Finding Sources...")
+    """
+    scraper 
+    {"results": list of data in json format}
+    is the json format 
+    """
 
+    bot.send_message(message.chat.id, "Finding Sources...")
     payload2 = {"keywords": keywords,
                 "original_query": user_text,
                 "max_search_count": max_search_count,
@@ -79,6 +74,7 @@ def reliability_model(message, user_text, bot,
                 }
 
     try:
+        bot.send_chat_action(message.chat.id, "typing")
         response = requests.post(scrape_url, json=payload2)
 
         if response.status_code == 200:
@@ -87,39 +83,24 @@ def reliability_model(message, user_text, bot,
             results = data.get("results", "N/A")
             print(f"here:: {results}")
             return_data = ""
-            count = 0
             for result in results:
-                if count == 5:
-                    break
                 if len(return_data) < 3000:
                     title = result.get("title", "")
                     url = result.get("url", "")
                     if url.endswith(".xml"):
                         continue
                     return_data += f"{title}\nlink: {url}\n\n\n"
-                    count += 1
-
 
         else:
             return_data = "Error verifying. Server responded with an error."
     except Exception as e:
         reply_data = f"Error: {e}"
 
-    # Delete the loading message before sending the result
-    try:
-        bot.delete_message(message.chat.id, sources_loading_msg.message_id)
-    except:
-        pass
-
     if return_data == "":
         bot.send_message(message.chat.id, "No relevant credible Sources could be found. This is likely a fake news.")
         return None
-
-    # Send the sources data
     bot.send_message(message.chat.id, return_data)
-
-    # Third loading message for content extraction
-    content_loading_msg = bot.send_message(message.chat.id, "Extracting content of sources...")
+    bot.send_message(message.chat.id, "extracting content of sources...")
 
     """
     content Scraper
@@ -127,6 +108,7 @@ def reliability_model(message, user_text, bot,
 
     payload3 = {"results": results}
     try:
+        bot.send_chat_action(message.chat.id, "typing")
         response = requests.post(scrape_content_url, json=payload3)
         if response.status_code == 200:
             data = response.json()
@@ -137,23 +119,18 @@ def reliability_model(message, user_text, bot,
     except Exception as e:
         reply_data = f"Error: {e}"
 
-    # Delete loading message and notify completion
-    try:
-        bot.delete_message(message.chat.id, content_loading_msg.message_id)
-    except:
-        pass
-    bot.send_message(message.chat.id, "Finished extracting articles content.")
+    bot.send_message(message.chat.id, "finished extracting articles content...")
 
     """
     now embedding:
 
     """
-    # Fourth loading message for analysis
-    analysis_loading_msg = bot.send_message(message.chat.id, "Analyzing content...")
 
+    bot.send_message(message.chat.id, "analysing content...")
     payload4 = {"input_text": user_text,
                 "article_info": results}
     try:
+        bot.send_chat_action(message.chat.id, "typing")
         response = requests.post(embedding_url, json=payload4)
         data = response.json()
 
@@ -170,31 +147,21 @@ def reliability_model(message, user_text, bot,
 
         top_articles = data.get("top_articles", [])
 
-        # Delete loading message before sending result
-        try:
-            bot.delete_message(message.chat.id, analysis_loading_msg.message_id)
-        except:
-            pass
-
-        # Send analysis results
         bot.send_message(message.chat.id,
-                         f"Analysis Results:\n\nAverage score: {average_score}\nHighest score: {max_score}\nLowest score: {min_score}")
+                         f"average score is: {average_score}\nhighest score is: {max_score}\nlowest score is: {min_score}")
+
         bot.reply_to(message, reliability_check(min_score, max_score, min_article, max_article))
 
     except Exception as e:
-        try:
-            bot.delete_message(message.chat.id, analysis_loading_msg.message_id)
-        except:
-            pass
         bot.send_message(message.chat.id, f"Error during embedding analysis: {e}")
         return
 
-    # --- STEP 5: GPT-based Reasoning Summary ---
+    # --- STEP 5: GPT-based Reasoning Summary using the explanation blueprint ---
     try:
-        # Fifth loading message for summarization
-        summary_loading_msg = bot.send_message(message.chat.id, "Summarizing Reasoning...")
+        bot.send_chat_action(message.chat.id, "typing")
+        bot.send_message(message.chat.id, "Summarising Reasoning...")
 
-        # Filter out articles with empty or placeholder content
+        # Filter out articles with empty or placeholder content.
         valid_articles = [
             article for article in article_data
             if article.get("article_content", "").strip() and
@@ -211,24 +178,27 @@ def reliability_model(message, user_text, bot,
                 if content:
                     supporting_texts.append(f"Source ({article_url}):\n{content}\n")
 
-        # If no valid supporting articles are found, use a fallback (e.g., use titles or a default message).
+        # If no valid supporting articles are found, use a fallback message.
         if not supporting_texts:
             supporting_texts = ["No sufficient supporting article content could be extracted."]
 
-        # Generate GPT reasoning summary
-        reasoning_summary = generate_reasoning_summary(user_text, supporting_texts, max_score, min_score)
+        # Prepare payload for the explanation endpoint.
+        payload5 = {
+            "user_text": user_text,
+            "supporting_texts": supporting_texts,
+            "max_score": max_score,
+            "min_score": min_score,
+            "temperature": 0.7
+        }
 
-        # Delete loading message before sending result
-        try:
-            bot.delete_message(message.chat.id, summary_loading_msg.message_id)
-        except:
-            pass
+        # Call the explanation blueprint route.
+        exp_response = requests.post(explanation_url, json=payload5)
+        if exp_response.status_code == 200:
+            exp_data = exp_response.json()
+            reasoning_summary = exp_data.get("reasoning_summary", "No reasoning summary returned.")
+        else:
+            reasoning_summary = f"Error generating reasoning summary: {exp_response.text}"
+
         bot.send_message(message.chat.id, f"Reasoning Summary:\n\n{reasoning_summary}")
-
     except Exception as e:
-        # Make sure to delete loading message even if there's an error
-        try:
-            bot.delete_message(message.chat.id, summary_loading_msg.message_id)
-        except:
-            pass
         bot.send_message(message.chat.id, f"Error generating reasoning summary: {e}")

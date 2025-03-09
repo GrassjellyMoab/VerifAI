@@ -48,13 +48,13 @@ def __stop_words_removing_processor(sentences):
     Excludes stop words and words that contain numbers.
     """
     pre_tf_idf_keywords = []
-    stop_words = set(stopwords.words('english'))
+    #stop_words = set(stopwords.words('english'))
 
     for sentence in sentences:
         words = sentence.split()
         filtered_words = [
             word.lower() for word in words
-            if word.lower() not in stop_words and not any(char.isdigit() for char in word)
+          #  if word.lower() not in stop_words and not any(char.isdigit() for char in word)
         ]
         pre_tf_idf_keywords.append(filtered_words)
     return pre_tf_idf_keywords
@@ -65,7 +65,7 @@ def tf_idf_keywords(user_text,redundancy_threshold=15):
     """
     # Tokenize into sentences
     sentences = __basic_tokenisation(user_text)  # split into words
-    if len(sentences) >= 2:
+    if len(sentences) >= 1:
         extracted = __stop_words_removing_processor(sentences)
 
     else:
@@ -77,28 +77,29 @@ def tf_idf_keywords(user_text,redundancy_threshold=15):
     for sentence in extracted:
         all_top_words.update(word for word in sentence)
 
+    if len(sentences) > 1:
 
-    max_df = __dynamic_max_df(sentences)
-    # Use TF-IDF to identify important sentences
-    vectorizer = TfidfVectorizer(
-        stop_words="english",
-        token_pattern=r"(?u)\b[A-Za-z]{3,}\b",  # Ignores numbers and short words (<3 letters)
-        ngram_range=(1, 2),  # Capture bigrams and trigrams
-        max_df=max_df,  # Ignore very common words
-        min_df=1,  # ignore words only appearing once
-        max_features=30  # only keep top 30 words
-    )
-    print("vectoriser at work")
+        max_df = __dynamic_max_df(sentences)
+        # Use TF-IDF to identify important sentences
+        vectorizer = TfidfVectorizer(
+            stop_words="english",
+            token_pattern=r"(?u)\b[A-Za-z0-9]{3,}\b",  # Ignores numbers and short words (<3 letters)
+            ngram_range=(1, 2),  # Capture bigrams and trigrams
+            max_df=max_df,  # Ignore very common words
+            min_df=1,  # ignore words only appearing once
+            max_features=30  # only keep top 30 words
+        )
+        print("vectoriser at work")
 
-    tfidf_matrix = vectorizer.fit_transform(sentences)
+        tfidf_matrix = vectorizer.fit_transform(sentences)
 
-    feature_names = vectorizer.get_feature_names_out()
+        feature_names = vectorizer.get_feature_names_out()
 
 
-    for i in range(len(sentences)):
-        scores = tfidf_matrix[i].toarray()[0]
-        top_indices = np.argsort(scores)[-3:][::-1]  # Get top 3 words
-        all_top_words.update(feature_names[j] for j in top_indices)
+        for i in range(len(sentences)):
+            scores = tfidf_matrix[i].toarray()[0]
+            top_indices = np.argsort(scores)[-3:][::-1]  # Get top 3 words
+            all_top_words.update(feature_names[j] for j in top_indices)
 
     return __remove_redundant_keywords(list(all_top_words), redundancy_threshold)
 
