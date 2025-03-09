@@ -1,11 +1,7 @@
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
-import ssl
-import nltk
 
-ssl._create_default_https_context = ssl._create_unverified_context
-nltk.download('stopwords')
 
 from nltk.corpus import stopwords
 from flask import Blueprint, request, jsonify
@@ -51,8 +47,6 @@ def __stop_words_removing_processor(sentences):
     """
     pre_tf_idf_keywords = []
     stop_words = set(stopwords.words('english'))
-
-
 
     for sentence in sentences:
         words = sentence.split()
