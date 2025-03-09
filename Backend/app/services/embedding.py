@@ -69,8 +69,10 @@ def compute_credibility_score():
         article_vec2 = embed_text(article_content,model2)
         sim1 = compute_similarity(claim_vec1, article_vec1)
         sim2 = compute_similarity(claim_vec2, article_vec2)
-        similarities.append((sim1, url))
-        similarities.append((sim2, url))
+        if sim1 > sim2:
+            similarities.append((sim1, url))
+        else:
+            similarities.append((sim2, url))
 
     if not similarities:
         return jsonify({
