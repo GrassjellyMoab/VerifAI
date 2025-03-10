@@ -38,6 +38,7 @@ VerifAI combats misinformation by providing instant, automated fact-checking dir
 ![Pytesseract](https://img.shields.io/badge/-Pytesseract-7F7F7F?logo=tesseract&logoColor=white)
 ![Google Custom Search API](https://img.shields.io/badge/-Google%20Search%20API-4285F4?logo=google&logoColor=white)
 ![Telegram API](https://img.shields.io/badge/-Telegram%20API-26A5E4?logo=telegram&logoColor=white)
+![OpenAI API](https://img.shields.io/badge/-OpenAI%20API-412991?logo=openai&logoColor=white)
 ![Flask](https://img.shields.io/badge/-Flask-000000?logo=flask&logoColor=white)
 | **Category**                 | **Technology Used**                           |
 |------------------------------|----------------------------------------------|
@@ -45,7 +46,7 @@ VerifAI combats misinformation by providing instant, automated fact-checking dir
 | **Natural Language Processing** | `scikit-learn`, `TF-IDF`    |
 | **Web Scraping & Data Extraction** | `BeautifulSoup4` |
 | **Image Analysis**        | OpenCV, TensorFlow, Pytesseract              |
-| **API Integrations**         | Google Custom Search API, Telegram API      |
+| **API Integrations**         | Google Custom Search API, Telegram API, Openai API      |
 | **Bot Framework**            | Python Telegram Bot API                      |
 | **Deployment**               | Flask             |
 ---
