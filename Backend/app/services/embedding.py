@@ -1,8 +1,12 @@
+import json
+
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 from flask import Blueprint, request, jsonify
-
+from app.database.sql import DatabaseAccess
+import sql
 
 embedding_blueprint = Blueprint("embedding_blueprint", __name__)
 
@@ -21,9 +25,13 @@ def embed_text(text,model):
 
 def compute_similarity(text_vec, article_vec):
     """
-    Computes cosine similarity between two vectors.
+    Computes cosine similarity and transforms it into a probability score using sigmoid.
     """
-    return float(cosine_similarity([text_vec], [article_vec])[0][0])
+    cosine_sim = float(cosine_similarity([text_vec], [article_vec])[0][0])
+
+
+
+    return cosine_sim
 
 
 @embedding_blueprint.route("/", methods=["POST"])
@@ -50,11 +58,11 @@ def compute_credibility_score():
     claim_vec3 = embed_text(input_text, model3)
     claim_vec4 = embed_text(input_text, model4)
     total_score = 0
-    highest_score = -1
-    min_score = 1
-    average_score = 0
-    supporting_article = "None"
-    challenging_article = "None"
+
+    embedding_list = claim_vec1.tolist()
+    embedding_json = json.dumps(embedding_list)
+    db_connector = DatabaseAccess()
+
 
     if not _:
         return jsonify({"credibility_score": total_score})
@@ -79,6 +87,10 @@ def compute_credibility_score():
 
         medium_sim = sorted([sim1, sim2, sim3])[1]
         mean_sim = min(sim1, sim2, sim3, sim4)
+
+        k = 10  # Adjust steepness
+        t = 0.65  # Midpoint of transformation
+        mean_sim = 1 / (1 + np.exp(-k * (mean_sim - t)))
         if mean_sim > 0.6:
             mean_sim += 0.08
         elif mean_sim < 0.4:
@@ -101,7 +113,7 @@ def compute_credibility_score():
 
     # Sort articles by similarity descending (highest first)
     similarities.sort(key=lambda x: x[0], reverse=True)
-
+    db_connector.insert_data(input_text, similarities[0][0],similarities[0][1],embedding_json)
     # Calculate average, highest and lowest scores
     scores_only = [s[0] for s in similarities]
     highest_score = max(scores_only)
@@ -115,6 +127,7 @@ def compute_credibility_score():
     supporting_article = similarities[0][1]
     # The most "challenging" article is the one with the lowest similarity
     challenging_article = similarities[-1][1]
+
 
     response_data = {
         "average_score": average_score,
@@ -130,3 +143,23 @@ def compute_credibility_score():
     return jsonify(response_data)
 
 
+if __name__ == "__main__":
+    import requests
+    data = {
+        "input_text": "COVID-19 vaccines are effective and safe.",  # Example input text
+        "article_info": [
+            {
+                "url": "https://example.com/article1",
+                "article_content": "Scientific studies confirm that COVID-19 vaccines significantly reduce severe cases.",
+                "reliability": 1
+            },
+            {
+                "url": "https://example.com/article2",
+                "article_content": "There are still ongoing debates on the long-term effects of vaccines.",
+                "reliability": -1
+            }
+        ]
+    }
+    response = requests.post("http://127.0.0.1:5050/embedding", json=data)
+    print("Status Code:", response.status_code)
+    print("Response JSON:", response.json())

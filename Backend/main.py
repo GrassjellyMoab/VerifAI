@@ -6,7 +6,6 @@ from app.services.scraper import scrape_blueprint
 from app.services.content_scraper import scrape_content_blueprint
 from app.services.embedding import embedding_blueprint
 from app.services.explanation import explanation_blueprint
-from app.controllers.heatmap_model import heatmap_creator
 
 
 def create_app():

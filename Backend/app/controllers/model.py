@@ -105,6 +105,8 @@ def reliability_model(message, user_text, bot,
     """
 
     payload3 = {"results": results}
+
+
     try:
         bot.send_chat_action(message.chat.id, "typing")
         response = requests.post(scrape_content_url, json=payload3)

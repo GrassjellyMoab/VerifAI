@@ -119,7 +119,7 @@ def google_custom_search(query, num_results=5):
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")  # Replace with your API key
     GOOGLE_CSE_ID = "50fd98dbe1984411d"  # Replace with your Custom Search Engine ID
     search_url = "https://www.googleapis.com/customsearch/v1"
-    final_query = f"{query} (site:.com OR site:.org OR site:.sg)"
+    final_query = f"{query}"
     print(f"query: {final_query}")
     params = {
         "key": GOOGLE_API_KEY,
@@ -188,7 +188,7 @@ def verify_keywords_with_sources():
 
     counter = 0
     while len({item['url'] for item in verified_results}) < min_source_count:
-        time.sleep(1)
+        time.sleep(2)
         if counter >= max_search_count:
             break
 
