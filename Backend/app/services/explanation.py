@@ -41,7 +41,7 @@ def reasoning_route():
     if len(supporting_combined) > MAX_SUPPORTING_LENGTH:
         supporting_combined = supporting_combined[:MAX_SUPPORTING_LENGTH] + "..."
 
-    print(supporting_texts)
+
     # Build the GPT prompt
     prompt = (
             "You are a fact-checking assistant on a telegram bot. Below is the user's claim, "

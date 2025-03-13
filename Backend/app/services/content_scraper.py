@@ -84,6 +84,7 @@ def scrape_content():
     """Fetches and extracts the main body of an article from a given URL concurrently."""
     data = request.get_json()
     urls = data.get("results")  # list of dicts: {title: title, url: url, reliability: r}
+
     return_data = []
 
     if not urls:
@@ -104,6 +105,7 @@ def scrape_content():
                 content = f"Error during extraction: {exc}"
             return_data.append({
                 "url": item.get("url"),
+                "title": item.get("title"),
                 "reliability": item.get("reliability"),
                 "article_content": content
             })

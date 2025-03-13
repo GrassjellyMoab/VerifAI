@@ -10,6 +10,7 @@ import re
 from app.services.check_domain import is_credible  # your is_credible function
 
 from dotenv import load_dotenv
+
 load_dotenv()
 scrape_blueprint = Blueprint("scrape_blueprint", __name__)
 
@@ -99,6 +100,7 @@ SINGAPORE_DOMAIN = [
     "businesstimes.com.sg",
 ]
 
+
 def get_domain(url: str) -> str:
     """Extracts the domain from a given URL."""
     try:
@@ -125,7 +127,7 @@ def google_custom_search(query, num_results=5):
         "key": GOOGLE_API_KEY,
         "cx": GOOGLE_CSE_ID,
         "q": final_query,
-        "num": num_results,
+        "num": 5,
     }
 
     response = requests.get(search_url, params=params)
@@ -142,7 +144,6 @@ def google_custom_search(query, num_results=5):
     return results
 
 
-
 def generate_credible_filter(credible_domains, max_sites=5):
     """
     Generates a query string filter using the 'site:' operator
@@ -154,8 +155,8 @@ def generate_credible_filter(credible_domains, max_sites=5):
     for i in range(max_sites):
         sites.append(credible_domains[random.randrange(len(credible_domains))])
 
-
     return " OR ".join([f"site:{site}" for site in sites])
+
 
 @scrape_blueprint.route("/", methods=["POST"])
 def verify_keywords_with_sources():
@@ -167,11 +168,10 @@ def verify_keywords_with_sources():
     keyword_query_percentage = data.get("keyword_query_percentage", 0.8)
     max_sites_in_query = data.get("max_sites_in_query", 5)
     is_singapore_sources = data.get("is_singapore_sources", False)
-    pdf_count = 0
+
 
     if keyword_query_percentage > 1 or keyword_query_percentage < 0.2:
         keyword_query_percentage = 0.5
-
 
     if not keywords:
         return jsonify({"error": "No keywords provided"}), 400
@@ -180,7 +180,6 @@ def verify_keywords_with_sources():
     # Generate a credible filter from a subset of credible domains
     # Append the filter to the query so only results from those domains are returned
 
-
     verified_results = []
     seen_urls = set()
 
@@ -188,7 +187,7 @@ def verify_keywords_with_sources():
 
     counter = 0
     while len({item['url'] for item in verified_results}) < min_source_count:
-        time.sleep(2)
+        time.sleep(1)
         if counter >= max_search_count:
             break
 
@@ -196,13 +195,14 @@ def verify_keywords_with_sources():
 
         try:
             percentage = (random.uniform(keyword_query_percentage, 0.8))
-
-            if len(keywords) <= 10:
-                random_keys = random.choices(keywords, k=int(0.8*(len(keywords)-1)))
+            if counter == 1:
+                random_keys = keywords
+            elif len(keywords) <= 10:
+                random_keys = random.choices(keywords, k=int(0.8 * (len(keywords) - 1)))
             elif len(keywords) <= 20:
                 random_keys = random.choices(keywords, k=int(0.7 * (len(keywords) - 1)))
             else:
-                random_keys = random.choices(keywords, k=int(percentage*(len(keywords)-1)))
+                random_keys = random.choices(keywords, k=int(percentage * (len(keywords) - 1)))
 
             base_query = " ".join(random_keys)
 
@@ -226,9 +226,7 @@ def verify_keywords_with_sources():
                     continue
 
                 if url.endswith(".pdf"):
-                    pdf_count+=1
                     continue
-
 
                 seen_urls.add(url)
                 if match:
@@ -241,6 +239,5 @@ def verify_keywords_with_sources():
 
         finally:
             pass
-
 
     return jsonify({"results": verified_results})
