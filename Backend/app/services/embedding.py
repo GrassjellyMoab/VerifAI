@@ -105,9 +105,9 @@ def compute_credibility_score():
         sim4 = compute_similarity(claim_vec4, article_vec4)
         sim5 = compute_similarity(claim_vec5, get_sentiment_vector(claim_vec5))
         medium_sim = sorted([sim1, sim2, sim3])[1]
-        lowest = min(sim1, sim2, sim3, sim4, sim5)
+        lowest = min(sim1, sim2, sim3, sim4)
 
-        mean_sim = (sim1+sim2+sim3+sim4+sim5 - lowest) /4
+        mean_sim = (sim1+sim2+sim3+sim4 - lowest) /3
 
         k = 10  # Adjust steepness
         t = 0.62  # Midpoint of transformation
@@ -143,6 +143,7 @@ def compute_credibility_score():
     average_score = sum(scores_only) / len(scores_only)
 
     # Get the top 2 articles (or fewer if less than 2)
+
     top_2 = similarities[:2]
 
     # The best supporting article is the one with the highest similarity
@@ -151,29 +152,9 @@ def compute_credibility_score():
     challenging_article = similarities[-1][1]
 
 
-    print("\n\n")
-    top = similarities[0]
-    global q
-    if q:
-        print(f"Title: {top[2]}\n\n"
-              f"Score: {top[0]}\n")
-
-        print("real score: ")
-        score = -1
-        while (score == -1):
-            try:
-                score = float(input())
-                if score == 1:
-                    q = False
-                    score = similarities[0][0]
-            except Exception as e:
-                pass
-
-    else:
-        score = similarities[0][0]
     response_data = {
         "average_score": average_score,
-        "highest_score": score,
+        "highest_score": highest_score,
         "lowest_score": lowest_score,
         "supporting_article": supporting_article,
         "challenging_article": challenging_article,
